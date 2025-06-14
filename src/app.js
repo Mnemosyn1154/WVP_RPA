@@ -62,7 +62,7 @@ class InvestmentDocumentApp {
       await this.loadConfiguration();
       
       // 3. 핵심 모듈 초기화
-      this.initializeModules();
+      await this.initializeModules();
       
       // 4. UI 초기화
       this.initializeUI();
@@ -132,7 +132,7 @@ class InvestmentDocumentApp {
   /**
    * 핵심 모듈 초기화
    */
-  initializeModules() {
+  async initializeModules() {
     try {
       // 데이터 검증기 초기화
       this.dataValidator = new DataValidator(this.validationConfig);
@@ -147,11 +147,14 @@ class InvestmentDocumentApp {
         this.calculationEngine
       );
       
+      // FormGenerator 명시적 초기화
+      await this.formGenerator.init();
+      
       // 템플릿 처리기 초기화
       this.templateProcessor = new TemplateProcessor(this.templatesConfig);
       
       // 로컬 스토리지 관리자 초기화
-      this.storage = new InvestmentStorage();
+      this.storage = new StorageManager();
       
       console.log('🔧 핵심 모듈 초기화 완료');
       
@@ -171,11 +174,11 @@ class InvestmentDocumentApp {
         loadingSpinner.style.display = 'none';
       }
       
-      // 폼 생성
-      const formContainer = document.getElementById('formContainer');
-      if (formContainer) {
-        this.formGenerator.generateForm(formContainer);
-      }
+      // 화폐 선택기 초기화
+      this.initializeCurrencySelector();
+      
+      // 폼 생성 - FormGenerator가 자체적으로 formContainer를 찾아서 생성
+      // this.formGenerator.generateForm() 메서드는 이미 init()에서 호출됨
       
       // 액션 바 표시
       const actionBar = document.getElementById('actionBar');
@@ -190,6 +193,31 @@ class InvestmentDocumentApp {
       
     } catch (error) {
       throw new Error(`UI 초기화 실패: ${error.message}`);
+    }
+  }
+
+  /**
+   * 화폐 선택기 초기화
+   */
+  initializeCurrencySelector() {
+    try {
+      const container = document.getElementById('currencySelectorContainer');
+      if (container && window.CurrencyManager) {
+        // CurrencyManager가 로드될 때까지 대기
+        const initSelector = () => {
+          if (window.CurrencyManager.currencies) {
+            window.CurrencyManager.createCurrencySelector(container);
+            console.log('💱 화폐 선택기 초기화 완료');
+          } else {
+            // CurrencyManager가 아직 로드되지 않았다면 잠시 후 재시도
+            setTimeout(initSelector, 100);
+          }
+        };
+        
+        initSelector();
+      }
+    } catch (error) {
+      console.warn('화폐 선택기 초기화 실패:', error);
     }
   }
 
@@ -542,8 +570,8 @@ class InvestmentDocumentApp {
 // 전역 앱 인스턴스 생성
 window.investmentApp = new InvestmentDocumentApp();
 
-// 개발용 디버깅 함수들
-if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
+// 개발용 디버깅 함수들 (localhost에서만 활성화)
+if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
   window.debugApp = {
     getFormData: () => window.investmentApp.formData,
     setFormData: (data) => { window.investmentApp.formData = data; },

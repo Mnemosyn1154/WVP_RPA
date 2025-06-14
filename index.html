@@ -13,8 +13,7 @@
     <link rel="stylesheet" href="src/assets/styles/components.css">
     <link rel="stylesheet" href="src/assets/styles/responsive.css">
     
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="src/assets/favicon.ico">
+    <!-- Favicon (추후 추가 예정) -->
 </head>
 <body>
     <!-- Header -->
@@ -25,6 +24,9 @@
                 <span class="version">v1.0</span>
             </div>
             <nav class="nav">
+                <div class="currency-selector-container" id="currencySelectorContainer">
+                    <!-- 화폐 선택기가 여기에 동적으로 추가됩니다 -->
+                </div>
                 <button class="nav-button" data-action="help">도움말</button>
                 <button class="nav-button" data-action="settings">설정</button>
             </nav>
@@ -113,6 +115,7 @@
     <script src="src/utils/helpers.js"></script>
     <script src="src/utils/storage.js"></script>
     <script src="src/utils/fileUtils.js"></script>
+    <script src="src/utils/CurrencyManager.js"></script>
     
     <script src="src/components/Toast.js"></script>
     <script src="src/components/Modal.js"></script>

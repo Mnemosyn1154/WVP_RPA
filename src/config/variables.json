@@ -64,14 +64,16 @@
         "투자금액": {
           "type": "number",
           "required": true,
-          "min": 1000000,
-          "max": 100000000000,
-          "step": 1000000,
-          "unit": "원",
+          "min": 0.1,
+          "max": 999999,
+          "step": 0.1,
+          "unit": "백만원",
           "format": "currency",
-          "placeholder": "예: 1000000000",
+          "placeholder": "예: 10 (10백만원)",
           "templateMapping": ["[투자금액]"],
-          "helpText": "투자하려는 금액을 원 단위로 입력하세요 (최소 100만원)"
+          "helpText": "투자하려는 금액을 백만원 단위로 입력하세요 (0보다 큰 값)",
+          "currencyField": true,
+          "fieldType": "investment_amount"
         },
         "투자재원": {
           "type": "select",
@@ -104,7 +106,9 @@
           "unit": "원/주",
           "placeholder": "예: 5000",
           "templateMapping": ["[투자단가]", "[주당가격]"],
-          "helpText": "주당 투자 단가를 입력하세요"
+          "helpText": "주당 투자 단가를 입력하세요",
+          "currencyField": true,
+          "fieldType": "price_per_share"
         },
         "액면가": {
           "type": "number",
@@ -115,19 +119,23 @@
           "step": 100,
           "unit": "원",
           "templateMapping": ["[액면가]"],
-          "helpText": "주식의 액면가를 입력하세요 (일반적으로 500원)"
+          "helpText": "주식의 액면가를 입력하세요 (일반적으로 500원)",
+          "currencyField": true,
+          "fieldType": "par_value"
         },
         "투자전가치": {
           "type": "number",
           "required": true,
-          "min": 1000000,
-          "max": 1000000000000,
-          "step": 1000000,
-          "unit": "원",
+          "min": 0.1,
+          "max": 999999,
+          "step": 0.1,
+          "unit": "백만원",
           "format": "currency",
-          "placeholder": "예: 10000000000",
+          "placeholder": "예: 100 (100백만원)",
           "templateMapping": ["[투자전가치]", "[Pre-money]"],
-          "helpText": "투자 전 회사의 기업가치를 입력하세요"
+          "helpText": "투자 전 회사의 기업가치를 백만원 단위로 입력하세요 (0보다 큰 값)",
+          "currencyField": true,
+          "fieldType": "company_valuation"
         },
         "투자후가치": {
           "type": "number",
@@ -135,11 +143,13 @@
           "calculated": true,
           "formula": "투자전가치 + 투자금액",
           "dependencies": ["투자전가치", "투자금액"],
-          "unit": "원",
+          "unit": "백만원",
           "format": "currency",
           "readonly": true,
           "templateMapping": ["[투자후가치]", "[Post-money]"],
-          "helpText": "자동 계산됩니다 (투자전가치 + 투자금액)"
+          "helpText": "자동 계산됩니다 (투자전가치 + 투자금액)",
+          "currencyField": true,
+          "fieldType": "company_valuation"
         },
         "동반투자자": {
           "type": "text",
@@ -166,7 +176,9 @@
           "format": "number",
           "readonly": true,
           "templateMapping": ["[인수주식수]"],
-          "helpText": "자동 계산됩니다 (투자금액 ÷ 투자단가)"
+          "helpText": "자동 계산됩니다 (투자금액 ÷ 투자단가)",
+          "currencyField": true,
+          "fieldType": "share_count"
         },
         "지분율": {
           "type": "number",

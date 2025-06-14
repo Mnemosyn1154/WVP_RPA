@@ -2,117 +2,15 @@
   "version": "1.0",
   "lastUpdated": "2025-01-23",
   "rules": {
-    "text": {
-      "company_name": {
-        "pattern": "^[가-힣a-zA-Z0-9\\s\\(\\)\\-_]+$",
-        "message": "한글, 영문, 숫자, 공백, 괄호, 하이픈, 언더스코어만 입력 가능합니다"
-      },
-      "mixed_text": {
-        "pattern": "^[가-힣a-zA-Z\\s]+$",
-        "message": "한글과 영문만 입력 가능합니다"
+    "basic": {
+      "number_format": {
+        "message": "올바른 숫자 형식이 아닙니다"
       }
-    },
-    "number": {
-      "positive_integer": {
-        "min": 1,
-        "step": 1,
-        "message": "양의 정수만 입력 가능합니다"
-      },
-      "positive_decimal": {
-        "min": 0,
-        "step": 0.1,
-        "message": "0 이상의 소수만 입력 가능합니다"
-      },
-      "percentage": {
-        "min": 0,
-        "max": 100,
-        "step": 0.01,
-        "message": "0-100 사이의 백분율을 입력하세요"
-      },
-      "investment_amount": {
-        "min": 1000000,
-        "max": 100000000000,
-        "step": 1000000,
-        "message": "100만원 이상 1천억원 이하로 입력하세요"
-      },
-      "share_price": {
-        "min": 1,
-        "max": 1000000,
-        "step": 1,
-        "message": "1원 이상 100만원 이하로 입력하세요"
-      },
-      "par_value": {
-        "min": 100,
-        "max": 5000,
-        "step": 100,
-        "message": "100원 이상 5,000원 이하로 입력하세요"
-      },
-      "interest_rate": {
-        "min": 0,
-        "max": 30,
-        "step": 0.1,
-        "message": "0% 이상 30% 이하로 입력하세요"
-      },
-      "penalty_rate": {
-        "min": 0,
-        "max": 50,
-        "step": 1,
-        "message": "0% 이상 50% 이하로 입력하세요"
-      }
-    },
-    "business_logic": {
-      "investment_valuation": {
-        "pre_money_vs_investment": {
-          "condition": "투자전가치 >= 투자금액 * 2",
-          "message": "투자전가치는 투자금액의 2배 이상이어야 합니다"
-        },
-        "share_price_vs_par_value": {
-          "condition": "투자단가 >= 액면가",
-          "message": "투자단가는 액면가 이상이어야 합니다"
-        },
-        "ownership_limit": {
-          "condition": "지분율 <= 50",
-          "message": "지분율은 50% 이하여야 합니다"
-        }
-      },
-      "interest_rates": {
-        "reasonable_dividend": {
-          "condition": "배당률 <= 5",
-          "message": "배당률은 일반적으로 5% 이하입니다"
-        },
-        "reasonable_redemption": {
-          "condition": "상환이자 <= 10",
-          "message": "상환이자는 일반적으로 10% 이하입니다"
-        }
-      }
-    }
-  },
-  "custom_validators": {
-    "korean_business_number": {
-      "description": "한국 사업자등록번호 형식 검증",
-      "pattern": "^\\d{3}-\\d{2}-\\d{5}$",
-      "message": "올바른 사업자등록번호 형식이 아닙니다 (예: 123-45-67890)"
-    },
-    "korean_phone": {
-      "description": "한국 전화번호 형식 검증",
-      "pattern": "^0\\d{1,2}-\\d{3,4}-\\d{4}$",
-      "message": "올바른 전화번호 형식이 아닙니다 (예: 02-1234-5678)"
-    },
-    "korean_address": {
-      "description": "한국 주소 기본 검증",
-      "minLength": 10,
-      "maxLength": 200,
-      "message": "주소는 10자 이상 200자 이하로 입력하세요"
     }
   },
   "error_messages": {
     "required": "{field}는 필수 입력 항목입니다",
-    "min_length": "{field}는 최소 {min}자 이상 입력해야 합니다",
-    "max_length": "{field}는 최대 {max}자까지 입력 가능합니다",
-    "min_value": "{field}는 {min} 이상이어야 합니다",
-    "max_value": "{field}는 {max} 이하여야 합니다",
-    "pattern_mismatch": "{field}의 형식이 올바르지 않습니다",
-    "calculation_error": "계산 중 오류가 발생했습니다. 입력값을 확인해주세요",
-    "dependency_error": "관련 필드를 먼저 입력해주세요"
+    "invalid_format": "{field}의 형식이 올바르지 않습니다",
+    "calculation_error": "계산 중 오류가 발생했습니다. 입력값을 확인해주세요"
   }
 } 

@@ -50,7 +50,38 @@
 
 .nav {
   display: flex;
+  align-items: center;
   gap: var(--spacing-sm);
+}
+
+.currency-selector-container {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-right: var(--spacing-md);
+}
+
+.currency-label {
+  font-size: var(--font-size-xs);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.currency-selector {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: var(--font-size-xs);
+  min-width: 120px;
+  transition: all var(--transition-fast);
+}
+
+.currency-selector:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--primary-color-alpha);
 }
 
 .nav-button {

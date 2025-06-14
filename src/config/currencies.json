@@ -1,0 +1,140 @@
+{
+  "version": "1.0",
+  "lastUpdated": "2025-01-23",
+  "defaultCurrency": "KRW",
+  "currencies": {
+    "KRW": {
+      "code": "KRW",
+      "name": "한국 원",
+      "symbol": "₩",
+      "unit": "백만원",
+      "baseUnit": "원",
+      "multiplier": 1000000,
+      "decimalPlaces": 0,
+      "format": {
+        "prefix": "",
+        "suffix": "백만원",
+        "separator": ",",
+        "decimal": "."
+      },
+      "ranges": {
+        "investment_amount": { "min": 0.1, "max": 999999 },
+        "company_valuation": { "min": 0.1, "max": 999999 },
+        "price_per_share": { "min": 1, "max": 1000000 },
+        "par_value": { "min": 100, "max": 5000 },
+        "share_count": { "min": 1, "max": 999999999 }
+      }
+    },
+    "USD": {
+      "code": "USD",
+      "name": "미국 달러",
+      "symbol": "$",
+      "unit": "Million USD",
+      "baseUnit": "USD",
+      "multiplier": 1000000,
+      "decimalPlaces": 2,
+      "format": {
+        "prefix": "$",
+        "suffix": "M",
+        "separator": ",",
+        "decimal": "."
+      },
+      "ranges": {
+        "investment_amount": { "min": 0.01, "max": 99999 },
+        "company_valuation": { "min": 0.01, "max": 99999 },
+        "price_per_share": { "min": 0.01, "max": 10000 },
+        "par_value": { "min": 0.01, "max": 100 },
+        "share_count": { "min": 1, "max": 999999999 }
+      }
+    },
+    "EUR": {
+      "code": "EUR",
+      "name": "유로",
+      "symbol": "€",
+      "unit": "Million EUR",
+      "baseUnit": "EUR",
+      "multiplier": 1000000,
+      "decimalPlaces": 2,
+      "format": {
+        "prefix": "€",
+        "suffix": "M",
+        "separator": ",",
+        "decimal": "."
+      },
+      "ranges": {
+        "investment_amount": { "min": 0.01, "max": 99999 },
+        "company_valuation": { "min": 0.01, "max": 99999 },
+        "price_per_share": { "min": 0.01, "max": 10000 },
+        "par_value": { "min": 0.01, "max": 100 },
+        "share_count": { "min": 1, "max": 999999999 }
+      }
+    },
+    "JPY": {
+      "code": "JPY",
+      "name": "일본 엔",
+      "symbol": "¥",
+      "unit": "억엔",
+      "baseUnit": "엔",
+      "multiplier": 100000000,
+      "decimalPlaces": 0,
+      "format": {
+        "prefix": "¥",
+        "suffix": "억",
+        "separator": ",",
+        "decimal": ""
+      },
+      "ranges": {
+        "investment_amount": { "min": 0.1, "max": 99999 },
+        "company_valuation": { "min": 0.1, "max": 99999 },
+        "price_per_share": { "min": 1, "max": 100000 },
+        "par_value": { "min": 1, "max": 1000 },
+        "share_count": { "min": 1, "max": 999999999 }
+      }
+    },
+    "CNY": {
+      "code": "CNY",
+      "name": "중국 위안",
+      "symbol": "¥",
+      "unit": "万元",
+      "baseUnit": "元",
+      "multiplier": 10000,
+      "decimalPlaces": 0,
+      "format": {
+        "prefix": "¥",
+        "suffix": "万",
+        "separator": ",",
+        "decimal": "."
+      },
+      "ranges": {
+        "investment_amount": { "min": 1, "max": 9999999 },
+        "company_valuation": { "min": 1, "max": 9999999 },
+        "price_per_share": { "min": 1, "max": 100000 },
+        "par_value": { "min": 1, "max": 1000 },
+        "share_count": { "min": 1, "max": 999999999 }
+      }
+    }
+  },
+  "exchangeRates": {
+    "note": "실제 환율은 외부 API에서 가져와야 합니다",
+    "lastUpdated": "2025-01-23",
+    "baseCurrency": "KRW",
+    "rates": {
+      "USD": 1300,
+      "EUR": 1400,
+      "JPY": 9,
+      "CNY": 180
+    }
+  },
+  "fieldMappings": {
+    "investment_fields": [
+      "투자금액",
+      "투자전가치", 
+      "투자후가치"
+    ],
+    "currency_dependent_fields": [
+      "투자단가",
+      "액면가",
+      "인수주식수"
+    ]
+  }
+} 

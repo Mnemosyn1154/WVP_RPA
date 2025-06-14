@@ -49,8 +49,9 @@
     "pizzip": "^3.1.4"
   },
   "devDependencies": {
+    "http-server": "^14.1.1",
     "live-server": "^1.2.2",
-    "http-server": "^14.1.1"
+    "puppeteer": "^24.10.1"
   },
   "files": [
     "index.html",
@@ -78,4 +79,4 @@
     "x64",
     "arm64"
   ]
-} 
+}

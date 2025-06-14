@@ -5,8 +5,9 @@
 
 class CalculationEngine {
     constructor() {
+        this.currencyManager = window.CurrencyManager;
         this.calculationRules = {
-            // 투자후가치 = 투자전가치 + 투자금액
+            // 투자후가치 = 투자전가치 + 투자금액 (백만원 단위)
             '투자후가치': (data) => {
                 const preMoney = this.parseNumber(data.투자전가치);
                 const investment = this.parseNumber(data.투자금액);
@@ -20,13 +21,21 @@ class CalculationEngine {
                 return (investment / postMoney) * 100;
             },
             
-            // 인수주식수 = 투자금액 / 투자단가
+            // 인수주식수 = 투자금액(백만원) * 1,000,000 / 투자단가(원)
             '인수주식수': (data) => {
-                const investment = this.parseNumber(data.투자금액);
+                const investmentInMillion = this.parseNumber(data.투자금액);
                 const pricePerShare = this.parseNumber(data.투자단가);
-                return Math.floor(investment / pricePerShare);
+                
+                // 백만원을 원으로 변환하여 계산
+                const investmentInWon = investmentInMillion * 1000000;
+                return Math.floor(investmentInWon / pricePerShare);
             }
         };
+        
+        // 화폐 변경 이벤트 리스너 등록
+        document.addEventListener('currencyChanged', (e) => {
+            this.onCurrencyChanged(e.detail);
+        });
     }
 
     /**
@@ -121,9 +130,11 @@ class CalculationEngine {
     parseNumber(value) {
         if (typeof value === 'number') return value;
         if (typeof value === 'string') {
-            return parseFloat(value.replace(/,/g, ''));
+            // 쉼표와 공백 제거 후 숫자로 변환
+            const cleanValue = value.replace(/[,\s]/g, '');
+            return parseFloat(cleanValue) || 0;
         }
-        return NaN;
+        return 0;
     }
 
     /**
@@ -189,6 +200,62 @@ class CalculationEngine {
         };
         
         return tolerances[fieldName] || 0;
+    }
+
+    /**
+     * 화폐 변경 시 처리
+     * @param {Object} currencyInfo - 화폐 변경 정보
+     */
+    onCurrencyChanged(currencyInfo) {
+        console.log('💱 CalculationEngine: 화폐 변경 감지', currencyInfo);
+        
+        // 화폐 변경 시 계산 규칙 업데이트
+        this.updateCalculationRules(currencyInfo.newCurrency);
+        
+        // 화폐 변경 이벤트 발생
+        const event = new CustomEvent('calculationRulesUpdated', {
+            detail: { currency: currencyInfo.newCurrency }
+        });
+        document.dispatchEvent(event);
+    }
+
+    /**
+     * 화폐에 따른 계산 규칙 업데이트
+     * @param {string} currencyCode - 화폐 코드
+     */
+    updateCalculationRules(currencyCode) {
+        const currency = this.currencyManager?.getCurrentCurrency();
+        if (!currency) return;
+
+        // 인수주식수 계산 규칙을 화폐에 맞게 업데이트
+        this.calculationRules['인수주식수'] = (data) => {
+            const investmentInDisplayUnit = this.parseNumber(data.투자금액);
+            const pricePerShare = this.parseNumber(data.투자단가);
+            
+            // 표시 단위를 기본 단위로 변환하여 계산
+            const investmentInBaseUnit = investmentInDisplayUnit * currency.multiplier;
+            return Math.floor(investmentInBaseUnit / pricePerShare);
+        };
+    }
+
+    /**
+     * 화폐 단위를 고려한 값 포맷팅
+     * @param {number} value - 포맷할 값
+     * @param {string} fieldName - 필드명
+     * @returns {string} 포맷된 값
+     */
+    formatCurrencyValue(value, fieldName) {
+        if (!this.currencyManager) {
+            return this.formatNumber(value);
+        }
+
+        // 화폐 관련 필드인지 확인
+        const currencyFields = ['투자금액', '투자전가치', '투자후가치'];
+        if (currencyFields.includes(fieldName)) {
+            return this.currencyManager.formatValue(value);
+        }
+
+        return this.formatNumber(value);
     }
 
     /**

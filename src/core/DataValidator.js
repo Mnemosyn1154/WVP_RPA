@@ -4,46 +4,52 @@
  */
 
 class DataValidator {
-    constructor() {
+    constructor(validationConfig = null) {
         this.validationRules = null;
-        this.loadValidationRules();
+        this.isLoaded = false;
+        
+        if (validationConfig) {
+            this.validationRules = validationConfig;
+            this.isLoaded = true;
+        }
+    }
+
+    async initialize() {
+        if (!this.isLoaded) {
+            await this.loadValidationRules();
+        }
+        return this;
     }
 
     async loadValidationRules() {
         try {
-            const response = await fetch('src/config/validation.json');
-            this.validationRules = await response.json();
+            const response = await fetch('/src/config/validation.json');
+            if (response.ok) {
+                this.validationRules = await response.json();
+                this.isLoaded = true;
+                console.log('유효성 검사 규칙이 로드되었습니다.');
+            } else {
+                console.warn('유효성 검사 규칙을 로드할 수 없습니다. 기본 규칙을 사용합니다.');
+                this.validationRules = this.getDefaultRules();
+                this.isLoaded = true;
+            }
         } catch (error) {
-            console.error('검증 규칙 로드 실패:', error);
+            console.error('유효성 검사 규칙 로드 중 오류:', error);
             this.validationRules = this.getDefaultRules();
+            this.isLoaded = true;
         }
     }
 
     getDefaultRules() {
         return {
-            patterns: {
-                korean_english: "^[가-힣a-zA-Z\\s]+$",
-                number_with_comma: "^[0-9,]+$",
-                percentage: "^\\d+(\\.\\d+)?$",
-                email: "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
-            },
-            ranges: {
-                investment_amount: { min: 1000000, max: 100000000000 },
-                percentage: { min: 0, max: 100 },
-                interest_rate: { min: 0, max: 50 }
-            },
-            business_logic: {
-                post_money_calculation: "투자후가치 = 투자전가치 + 투자금액",
-                ownership_calculation: "지분율 = 투자금액 / 투자후가치 * 100"
+            // 기본 규칙은 최소한으로 유지
+            basic: {
+                number_format: "숫자 형식만 검증"
             }
         };
     }
 
     validateField(fieldName, value, context = {}) {
-        if (!this.validationRules) {
-            return { isValid: true };
-        }
-
         const result = {
             isValid: true,
             errors: [],
@@ -62,109 +68,24 @@ class DataValidator {
             return result;
         }
 
-        // 패턴 검증
-        this.validatePattern(fieldName, value, result);
-
-        // 범위 검증
-        this.validateRange(fieldName, value, result);
-
-        // 비즈니스 로직 검증
-        this.validateBusinessLogic(fieldName, value, context, result);
+        // 숫자 필드에 대한 기본적인 형식 검증만 수행
+        this.validateBasicFormat(fieldName, value, result);
 
         return result;
     }
 
-    validatePattern(fieldName, value, result) {
-        const patterns = this.validationRules.patterns;
+    validateBasicFormat(fieldName, value, result) {
+        // 숫자 필드인 경우 기본적인 숫자 형식만 검증
+        const numericFields = [
+            '투자금액', '투자전가치', '투자후가치', '투자단가', '액면가',
+            '지분율', '상환이자', '잔여분배이자', '주매청이자', '배당률', '위약벌', '인수주식수'
+        ];
         
-        switch (fieldName) {
-            case '투자대상':
-            case '대표자':
-            case '담당자투자총괄':
-                if (!this.testPattern(value, patterns.korean_english)) {
-                    result.isValid = false;
-                    result.errors.push('한글과 영문만 입력 가능합니다.');
-                }
-                break;
-                
-            case '투자금액':
-            case '투자전가치':
-            case '투자후가치':
-            case '투자단가':
-            case '액면가':
-                const numericValue = this.parseNumber(value);
-                if (isNaN(numericValue)) {
-                    result.isValid = false;
-                    result.errors.push('숫자만 입력 가능합니다.');
-                }
-                break;
-                
-            case '지분율':
-            case '상환이자':
-            case '잔여분배이자':
-            case '주매청이자':
-            case '배당률':
-            case '위약벌':
-                if (!this.testPattern(value.toString(), patterns.percentage)) {
-                    result.isValid = false;
-                    result.errors.push('올바른 퍼센트 형식이 아닙니다.');
-                }
-                break;
-        }
-    }
-
-    validateRange(fieldName, value, result) {
-        const ranges = this.validationRules.ranges;
-        const numericValue = this.parseNumber(value);
-        
-        if (isNaN(numericValue)) return;
-
-        switch (fieldName) {
-            case '투자금액':
-                if (!this.isInRange(numericValue, ranges.investment_amount)) {
-                    result.isValid = false;
-                    result.errors.push(`투자금액은 ${this.formatNumber(ranges.investment_amount.min)}원 이상 ${this.formatNumber(ranges.investment_amount.max)}원 이하여야 합니다.`);
-                }
-                break;
-                
-            case '지분율':
-            case '상환이자':
-            case '잔여분배이자':
-            case '주매청이자':
-            case '배당률':
-            case '위약벌':
-                if (!this.isInRange(numericValue, ranges.percentage)) {
-                    result.isValid = false;
-                    result.errors.push('0% 이상 100% 이하의 값을 입력해주세요.');
-                }
-                break;
-        }
-    }
-
-    validateBusinessLogic(fieldName, value, context, result) {
-        const numericValue = this.parseNumber(value);
-        
-        // 투자후가치 = 투자전가치 + 투자금액
-        if (fieldName === '투자후가치' && context.투자전가치 && context.투자금액) {
-            const expectedValue = this.parseNumber(context.투자전가치) + this.parseNumber(context.투자금액);
-            if (Math.abs(numericValue - expectedValue) > 1000) {
-                result.warnings.push('투자후가치가 투자전가치 + 투자금액과 일치하지 않습니다.');
-            }
-        }
-
-        // 지분율 = 투자금액 / 투자후가치 * 100
-        if (fieldName === '지분율' && context.투자금액 && context.투자후가치) {
-            const expectedValue = (this.parseNumber(context.투자금액) / this.parseNumber(context.투자후가치)) * 100;
-            if (Math.abs(numericValue - expectedValue) > 0.1) {
-                result.warnings.push('지분율이 계산값과 일치하지 않습니다.');
-            }
-        }
-
-        // 인수주식수 = 투자금액 / 투자단가
-        if (fieldName === '인수주식수' && context.투자금액 && context.투자단가) {
-            const expectedValue = this.parseNumber(context.투자금액) / this.parseNumber(context.투자단가);
-            if (Math.abs(numericValue - expectedValue) > 1) {
-                result.warnings.push('인수주식수가 계산값과 일치하지 않습니다.');
+        if (numericFields.includes(fieldName)) {
+            const numericValue = this.parseNumber(value);
+            if (isNaN(numericValue)) {
+                result.isValid = false;
+                result.errors.push('올바른 숫자 형식이 아닙니다.');
             }
         }
     }
@@ -225,26 +146,12 @@ class DataValidator {
         return value === null || value === undefined || value === '';
     }
 
-    testPattern(value, pattern) {
-        try {
-            const regex = new RegExp(pattern);
-            return regex.test(value);
-        } catch (error) {
-            console.error('패턴 검증 오류:', error);
-            return true;
-        }
-    }
-
     parseNumber(value) {
         if (typeof value === 'number') return value;
         if (typeof value === 'string') {
             return parseFloat(value.replace(/,/g, ''));
         }
         return NaN;
-    }
-
-    isInRange(value, range) {
-        return value >= range.min && value <= range.max;
     }
 
     formatNumber(number) {

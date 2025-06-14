@@ -4,24 +4,90 @@
  */
 
 class FormGenerator {
-    constructor() {
-        this.variables = null;
+    constructor(variablesConfig = null, dataValidator = null, calculationEngine = null) {
+        this.variables = variablesConfig;
+        this.dataValidator = dataValidator;
+        this.calculationEngine = calculationEngine;
         this.formContainer = null;
         this.sections = new Map();
         this.fields = new Map();
+        this.isInitialized = false;
         
-        this.init();
+        // 자동 초기화 제거 - 명시적으로 init() 호출 필요
+        console.log('🔧 FormGenerator 인스턴스 생성됨 (초기화 대기 중...)');
     }
 
     async init() {
+        // 중복 초기화 방지
+        if (this.isInitialized) {
+            console.log('⚠️ FormGenerator가 이미 초기화되었습니다. 중복 초기화를 건너뜁니다.');
+            return;
+        }
+        
         try {
-            await this.loadVariables();
+            console.log('🔧 FormGenerator 초기화 시작...');
+            
+            // 변수가 전달되지 않은 경우에만 로드
+            if (!this.variables) {
+                console.log('📁 변수 설정 로드 중...');
+                await this.loadVariables();
+            } else {
+                console.log('✅ 변수 설정이 이미 전달됨');
+            }
+            
+            // DOM과 컴포넌트가 준비될 때까지 대기
+            console.log('⏳ DOM과 컴포넌트 로딩 대기 중...');
+            await this.waitForDOMAndComponents();
+            console.log('✅ DOM과 컴포넌트 준비 완료');
+            
             this.formContainer = document.getElementById('formContainer');
             if (this.formContainer) {
+                console.log('📋 폼 생성 시작...');
                 this.generateForm();
+                this.isInitialized = true; // 초기화 완료 플래그 설정
+                console.log('✅ FormGenerator 초기화 완료');
+            } else {
+                throw new Error('formContainer 요소를 찾을 수 없습니다.');
             }
         } catch (error) {
-            console.error('FormGenerator 초기화 실패:', error);
+            console.error('❌ FormGenerator 초기화 실패 - 상세 에러:', error);
+            console.error('❌ 에러 스택:', error.stack);
+            console.error('❌ 에러 메시지:', error.message);
+            
+            // 에러 상태 정보 출력
+            console.log('🔍 디버그 정보:');
+            console.log('- variables 존재:', !!this.variables);
+            console.log('- FormSection 존재:', !!window.FormSection);
+            console.log('- FormField 존재:', !!window.FormField);
+            console.log('- formContainer 존재:', !!this.formContainer);
+            
+            throw error; // 에러를 다시 던져서 상위에서 처리할 수 있도록
+        }
+    }
+
+    async waitForDOMAndComponents() {
+        // DOM 준비 대기
+        if (document.readyState === 'loading') {
+            await new Promise(resolve => {
+                document.addEventListener('DOMContentLoaded', resolve);
+            });
+        }
+        
+        // 컴포넌트 로딩 대기
+        let attempts = 0;
+        const maxAttempts = 50; // 5초 대기
+        
+        while (attempts < maxAttempts) {
+            if (window.FormSection && window.FormField) {
+                return; // 컴포넌트가 로드됨
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+        
+        if (!window.FormSection || !window.FormField) {
+            throw new Error('FormSection 또는 FormField 컴포넌트를 로드할 수 없습니다.');
         }
     }
 
@@ -36,84 +102,224 @@ class FormGenerator {
     }
 
     generateForm() {
-        if (!this.variables || !this.formContainer) return;
+        try {
+            console.log('📋 generateForm 시작');
+            console.log('- variables 존재:', !!this.variables);
+            console.log('- formContainer 존재:', !!this.formContainer);
+            
+            if (!this.variables || !this.formContainer) {
+                throw new Error(`필수 요소 누락 - variables: ${!!this.variables}, formContainer: ${!!this.formContainer}`);
+            }
 
-        // 로딩 스피너 제거
-        const loadingSpinner = this.formContainer.querySelector('#loadingSpinner');
-        if (loadingSpinner) {
-            loadingSpinner.remove();
+            // variables 구조 확인
+            if (!this.variables.sections) {
+                throw new Error('variables.sections가 정의되지 않았습니다.');
+            }
+            
+            console.log('📁 섹션 수:', Object.keys(this.variables.sections).length);
+
+            // 로딩 스피너 제거
+            const loadingSpinner = this.formContainer.querySelector('#loadingSpinner');
+            if (loadingSpinner) {
+                loadingSpinner.remove();
+                console.log('🔄 로딩 스피너 제거됨');
+            }
+
+            // 섹션별로 폼 생성
+            let sectionCount = 0;
+            for (const [sectionKey, sectionData] of Object.entries(this.variables.sections)) {
+                try {
+                    console.log(`📝 섹션 생성 중: ${sectionKey}`);
+                    const sectionElement = this.createSection(sectionKey, sectionData);
+                    this.formContainer.appendChild(sectionElement);
+                    sectionCount++;
+                    console.log(`✅ 섹션 생성 완료: ${sectionKey}`);
+                } catch (sectionError) {
+                    console.error(`❌ 섹션 생성 실패 (${sectionKey}):`, sectionError);
+                    throw new Error(`섹션 '${sectionKey}' 생성 실패: ${sectionError.message}`);
+                }
+            }
+            
+            console.log(`✅ 총 ${sectionCount}개 섹션 생성 완료`);
+
+            // 액션 바 표시
+            const actionBar = document.getElementById('actionBar');
+            if (actionBar) {
+                actionBar.style.display = 'flex';
+                console.log('🎮 액션 바 표시됨');
+            } else {
+                console.warn('⚠️ actionBar 요소를 찾을 수 없습니다.');
+            }
+
+            // 이벤트 리스너 설정
+            try {
+                this.setupEventListeners();
+                console.log('🎧 이벤트 리스너 설정 완료');
+            } catch (listenerError) {
+                console.error('❌ 이벤트 리스너 설정 실패:', listenerError);
+                // 이벤트 리스너 실패는 치명적이지 않으므로 계속 진행
+            }
+            
+            console.log('🎉 generateForm 완료');
+            
+        } catch (error) {
+            console.error('❌ generateForm 실패:', error);
+            console.error('❌ 에러 스택:', error.stack);
+            throw error;
         }
-
-        // 섹션별로 폼 생성
-        for (const [sectionKey, sectionData] of Object.entries(this.variables.sections)) {
-            const sectionElement = this.createSection(sectionKey, sectionData);
-            this.formContainer.appendChild(sectionElement);
-        }
-
-        // 액션 바 표시
-        const actionBar = document.getElementById('actionBar');
-        if (actionBar) {
-            actionBar.style.display = 'flex';
-        }
-
-        // 이벤트 리스너 설정
-        this.setupEventListeners();
     }
 
     createSection(sectionKey, sectionData) {
-        const section = window.FormSection.create({
-            title: sectionData.title,
-            description: sectionData.description,
-            collapsible: true,
-            collapsed: sectionData.collapsed || false
-        });
+        try {
+            console.log(`🔧 createSection 시작: ${sectionKey}`);
+            console.log('- sectionData:', sectionData);
+            
+            if (!sectionData) {
+                throw new Error(`섹션 데이터가 없습니다: ${sectionKey}`);
+            }
+            
+            if (!sectionData.title) {
+                throw new Error(`섹션 제목이 없습니다: ${sectionKey}`);
+            }
+            
+            if (!window.FormSection) {
+                throw new Error('FormSection 컴포넌트가 로드되지 않았습니다.');
+            }
 
-        const sectionId = section.getAttribute('data-section-id');
-        this.sections.set(sectionKey, sectionId);
+            const section = window.FormSection.create({
+                title: sectionData.title,
+                description: sectionData.description,
+                collapsible: true,
+                collapsed: sectionData.collapsed || false
+            });
 
-        // 섹션에 필드들 추가
-        for (const [fieldKey, fieldData] of Object.entries(sectionData.variables)) {
-            const fieldElement = this.createField(fieldKey, fieldData);
-            const content = section.querySelector('.form-section-content');
-            content.appendChild(fieldElement);
+            if (!section) {
+                throw new Error(`FormSection.create()가 null을 반환했습니다: ${sectionKey}`);
+            }
+
+            const sectionId = section.getAttribute('data-section-id');
+            if (!sectionId) {
+                throw new Error(`섹션 ID를 가져올 수 없습니다: ${sectionKey}`);
+            }
+            
+            this.sections.set(sectionKey, sectionId);
+            console.log(`📝 섹션 ID 저장: ${sectionKey} -> ${sectionId}`);
+
+            // 섹션에 필드들 추가
+            if (sectionData.fields && typeof sectionData.fields === 'object') {
+                const fieldCount = Object.keys(sectionData.fields).length;
+                console.log(`📋 필드 생성 시작: ${fieldCount}개`);
+                
+                let createdFields = 0;
+                for (const [fieldKey, fieldData] of Object.entries(sectionData.fields)) {
+                    try {
+                        console.log(`🔧 필드 생성 중: ${fieldKey}`);
+                        const fieldElement = this.createField(fieldKey, fieldData);
+                        const content = section.querySelector('.form-section-content');
+                        
+                        if (!content) {
+                            throw new Error(`섹션 콘텐츠 영역을 찾을 수 없습니다: ${sectionKey}`);
+                        }
+                        
+                        content.appendChild(fieldElement);
+                        createdFields++;
+                        console.log(`✅ 필드 생성 완료: ${fieldKey}`);
+                    } catch (fieldError) {
+                        console.error(`❌ 필드 생성 실패 (${fieldKey}):`, fieldError);
+                        throw new Error(`필드 '${fieldKey}' 생성 실패: ${fieldError.message}`);
+                    }
+                }
+                
+                console.log(`✅ 총 ${createdFields}개 필드 생성 완료`);
+            } else {
+                console.warn(`⚠️ 섹션에 필드가 없습니다: ${sectionKey}`);
+            }
+
+            console.log(`🎉 createSection 완료: ${sectionKey}`);
+            return section;
+            
+        } catch (error) {
+            console.error(`❌ createSection 실패 (${sectionKey}):`, error);
+            console.error('❌ 에러 스택:', error.stack);
+            throw error;
         }
-
-        return section;
     }
 
     createField(fieldKey, fieldData) {
-        const fieldConfig = {
-            label: fieldData.label,
-            name: fieldKey,
-            type: this.getFieldType(fieldData.type),
-            required: fieldData.required || false,
-            placeholder: fieldData.placeholder || '',
-            help: fieldData.description || '',
-            value: fieldData.default || '',
-            validate: this.getValidator(fieldKey, fieldData),
-            onChange: (value, fieldId) => this.handleFieldChange(fieldKey, value, fieldId)
-        };
+        try {
+            console.log(`🔧 createField 시작: ${fieldKey}`);
+            console.log('- fieldData:', fieldData);
+            
+            if (!fieldData) {
+                throw new Error(`필드 데이터가 없습니다: ${fieldKey}`);
+            }
+            
+            if (!window.FormField) {
+                throw new Error('FormField 컴포넌트가 로드되지 않았습니다.');
+            }
 
-        // 숫자 필드 추가 설정
-        if (fieldData.type === 'number') {
-            fieldConfig.min = fieldData.min;
-            fieldConfig.max = fieldData.max;
-            fieldConfig.step = fieldData.step || 1;
+            const fieldConfig = {
+                label: fieldKey, // variables.json에 label이 없으므로 fieldKey 사용
+                name: fieldKey,
+                type: this.getFieldType(fieldData.type),
+                required: fieldData.required || false,
+                placeholder: fieldData.placeholder || '',
+                help: fieldData.helpText || '', // description -> helpText
+                value: fieldData.default || '',
+                validate: this.getValidator(fieldKey, fieldData),
+                onChange: (value, fieldId) => this.handleFieldChange(fieldKey, value, fieldId)
+            };
+
+            // 숫자 필드 추가 설정
+            if (fieldData.type === 'number') {
+                fieldConfig.min = fieldData.min;
+                fieldConfig.max = fieldData.max;
+                fieldConfig.step = fieldData.step || 1;
+                fieldConfig.unit = fieldData.unit || '';
+            }
+
+            // 화폐 필드 설정
+            if (fieldData.currencyField) {
+                fieldConfig.currencyField = true;
+                fieldConfig.fieldType = fieldData.fieldType || 'default';
+            }
+
+            // 선택 필드 옵션
+            if (fieldData.options) {
+                fieldConfig.options = fieldData.options.map(opt => ({
+                    value: opt.value || opt,
+                    label: opt.label || opt
+                }));
+            }
+
+            // 읽기 전용 필드 설정
+            if (fieldData.readonly || fieldData.calculated) {
+                fieldConfig.readonly = true;
+            }
+
+            console.log(`📝 필드 설정:`, fieldConfig);
+            
+            const fieldElement = window.FormField.create(fieldConfig);
+            
+            if (!fieldElement) {
+                throw new Error(`FormField.create()가 null을 반환했습니다: ${fieldKey}`);
+            }
+            
+            const fieldId = fieldElement.getAttribute('data-field-id');
+            if (!fieldId) {
+                throw new Error(`필드 ID를 가져올 수 없습니다: ${fieldKey}`);
+            }
+            
+            this.fields.set(fieldKey, fieldId);
+            console.log(`✅ createField 완료: ${fieldKey} -> ${fieldId}`);
+
+            return fieldElement;
+            
+        } catch (error) {
+            console.error(`❌ createField 실패 (${fieldKey}):`, error);
+            console.error('❌ 에러 스택:', error.stack);
+            throw error;
         }
-
-        // 선택 필드 옵션
-        if (fieldData.options) {
-            fieldConfig.options = fieldData.options.map(opt => ({
-                value: opt.value || opt,
-                label: opt.label || opt
-            }));
-        }
-
-        const fieldElement = window.FormField.create(fieldConfig);
-        const fieldId = fieldElement.getAttribute('data-field-id');
-        this.fields.set(fieldKey, fieldId);
-
-        return fieldElement;
     }
 
     getFieldType(type) {
@@ -134,7 +340,10 @@ class FormGenerator {
 
     getValidator(fieldKey, fieldData) {
         return (value) => {
-            const result = window.DataValidator.validateField(fieldKey, value, this.getAllFieldValues());
+            const validator = this.dataValidator || window.DataValidator;
+            if (!validator) return true;
+            
+            const result = validator.validateField(fieldKey, value, this.getAllFieldValues());
             
             if (!result.isValid && result.errors.length > 0) {
                 return result.errors[0];
@@ -156,14 +365,17 @@ class FormGenerator {
     }
 
     performAutoCalculations(changedField, value) {
+        const calculator = this.calculationEngine || window.CalculationEngine;
+        if (!calculator) return;
+        
         const allData = this.getAllFieldValues();
-        const calculableFields = window.CalculationEngine.getCalculableFields();
+        const calculableFields = calculator.getCalculableFields();
         
         for (const fieldName of calculableFields) {
             if (fieldName === changedField) continue; // 변경된 필드는 제외
             
-            if (window.CalculationEngine.canCalculate(fieldName, allData)) {
-                const calculatedValue = window.CalculationEngine.calculate(fieldName, allData);
+            if (calculator.canCalculate(fieldName, allData)) {
+                const calculatedValue = calculator.calculate(fieldName, allData);
                 
                 if (calculatedValue !== null) {
                     this.setFieldValue(fieldName, calculatedValue);
@@ -212,8 +424,8 @@ class FormGenerator {
 
     findFieldConfig(fieldKey) {
         for (const sectionData of Object.values(this.variables.sections)) {
-            if (sectionData.variables[fieldKey]) {
-                return sectionData.variables[fieldKey];
+            if (sectionData.fields[fieldKey]) {
+                return sectionData.fields[fieldKey];
             }
         }
         return null;

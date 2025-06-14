@@ -170,6 +170,13 @@
     display: block;
 }
 
+.form-field-unit {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    font-weight: var(--font-weight-normal);
+    margin-left: var(--spacing-xs);
+}
+
 /* Buttons */
 .btn {
     display: inline-flex;
