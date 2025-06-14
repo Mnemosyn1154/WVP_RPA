@@ -1,0 +1,262 @@
+{
+  "version": "1.0",
+  "lastUpdated": "2025-01-23",
+  "sections": {
+    "company_info": {
+      "title": "회사 기본 정보",
+      "icon": "🏢",
+      "order": 1,
+      "fields": {
+        "투자대상": {
+          "type": "text",
+          "required": true,
+          "maxLength": 50,
+          "validation": "^[가-힣a-zA-Z0-9\\s\\(\\)\\-_]+$",
+          "placeholder": "투자대상 회사명을 입력하세요",
+          "templateMapping": ["[투자대상]", "[회사명]"],
+          "helpText": "투자하려는 회사의 정확한 법인명을 입력하세요"
+        },
+        "대표자": {
+          "type": "text",
+          "required": true,
+          "maxLength": 30,
+          "validation": "^[가-힣a-zA-Z\\s]+$",
+          "placeholder": "대표자 성명을 입력하세요",
+          "templateMapping": ["[대표자]", "[대표자명]"],
+          "helpText": "회사의 대표이사 성명을 입력하세요"
+        },
+        "주소": {
+          "type": "textarea",
+          "required": true,
+          "maxLength": 200,
+          "placeholder": "회사 주소를 입력하세요",
+          "templateMapping": ["[주소]", "[회사주소]"],
+          "helpText": "회사의 본사 주소를 상세히 입력하세요"
+        },
+        "Series": {
+          "type": "select",
+          "required": true,
+          "options": [
+            {"value": "Seed", "label": "Seed Round"},
+            {"value": "Pre-A", "label": "Pre-A Round"},
+            {"value": "Series A", "label": "Series A"},
+            {"value": "Series B", "label": "Series B"},
+            {"value": "Series C", "label": "Series C"}
+          ],
+          "templateMapping": ["[Series]", "[투자라운드]"],
+          "helpText": "현재 투자 라운드를 선택하세요"
+        },
+        "사용용도": {
+          "type": "textarea",
+          "required": true,
+          "maxLength": 500,
+          "placeholder": "투자금 사용 용도를 구체적으로 입력하세요",
+          "templateMapping": ["[사용용도]", "[투자목적]"],
+          "helpText": "투자금이 어떤 용도로 사용될지 구체적으로 기술하세요"
+        }
+      }
+    },
+    "investment_terms": {
+      "title": "투자 조건",
+      "icon": "💰",
+      "order": 2,
+      "fields": {
+        "투자금액": {
+          "type": "number",
+          "required": true,
+          "min": 1000000,
+          "max": 100000000000,
+          "step": 1000000,
+          "unit": "원",
+          "format": "currency",
+          "placeholder": "예: 1000000000",
+          "templateMapping": ["[투자금액]"],
+          "helpText": "투자하려는 금액을 원 단위로 입력하세요 (최소 100만원)"
+        },
+        "투자재원": {
+          "type": "select",
+          "required": true,
+          "options": [
+            {"value": "자기자금", "label": "자기자금"},
+            {"value": "차입금", "label": "차입금"},
+            {"value": "혼합", "label": "자기자금 + 차입금"}
+          ],
+          "templateMapping": ["[투자재원]"],
+          "helpText": "투자자금의 조달 방식을 선택하세요"
+        },
+        "투자방식": {
+          "type": "select",
+          "required": true,
+          "options": [
+            {"value": "전환우선주", "label": "전환우선주"},
+            {"value": "보통주", "label": "보통주"},
+            {"value": "전환사채", "label": "전환사채"}
+          ],
+          "templateMapping": ["[투자방식]"],
+          "helpText": "투자 방식을 선택하세요"
+        },
+        "투자단가": {
+          "type": "number",
+          "required": true,
+          "min": 1,
+          "max": 1000000,
+          "step": 1,
+          "unit": "원/주",
+          "placeholder": "예: 5000",
+          "templateMapping": ["[투자단가]", "[주당가격]"],
+          "helpText": "주당 투자 단가를 입력하세요"
+        },
+        "액면가": {
+          "type": "number",
+          "required": true,
+          "default": 500,
+          "min": 100,
+          "max": 5000,
+          "step": 100,
+          "unit": "원",
+          "templateMapping": ["[액면가]"],
+          "helpText": "주식의 액면가를 입력하세요 (일반적으로 500원)"
+        },
+        "투자전가치": {
+          "type": "number",
+          "required": true,
+          "min": 1000000,
+          "max": 1000000000000,
+          "step": 1000000,
+          "unit": "원",
+          "format": "currency",
+          "placeholder": "예: 10000000000",
+          "templateMapping": ["[투자전가치]", "[Pre-money]"],
+          "helpText": "투자 전 회사의 기업가치를 입력하세요"
+        },
+        "투자후가치": {
+          "type": "number",
+          "required": true,
+          "calculated": true,
+          "formula": "투자전가치 + 투자금액",
+          "dependencies": ["투자전가치", "투자금액"],
+          "unit": "원",
+          "format": "currency",
+          "readonly": true,
+          "templateMapping": ["[투자후가치]", "[Post-money]"],
+          "helpText": "자동 계산됩니다 (투자전가치 + 투자금액)"
+        },
+        "동반투자자": {
+          "type": "text",
+          "required": false,
+          "maxLength": 100,
+          "placeholder": "동반투자자가 있는 경우 입력",
+          "templateMapping": ["[동반투자자]"],
+          "helpText": "함께 투자하는 다른 투자자가 있다면 입력하세요"
+        }
+      }
+    },
+    "financial_info": {
+      "title": "재무 정보",
+      "icon": "📊",
+      "order": 3,
+      "fields": {
+        "인수주식수": {
+          "type": "number",
+          "required": true,
+          "calculated": true,
+          "formula": "Math.floor(투자금액 / 투자단가)",
+          "dependencies": ["투자금액", "투자단가"],
+          "unit": "주",
+          "format": "number",
+          "readonly": true,
+          "templateMapping": ["[인수주식수]"],
+          "helpText": "자동 계산됩니다 (투자금액 ÷ 투자단가)"
+        },
+        "지분율": {
+          "type": "number",
+          "required": true,
+          "calculated": true,
+          "formula": "((투자금액 / 투자후가치) * 100).toFixed(2)",
+          "dependencies": ["투자금액", "투자후가치"],
+          "unit": "%",
+          "format": "percentage",
+          "readonly": true,
+          "templateMapping": ["[지분율]"],
+          "helpText": "자동 계산됩니다 (투자금액 ÷ 투자후가치 × 100)"
+        },
+        "상환이자": {
+          "type": "number",
+          "required": true,
+          "min": 0,
+          "max": 20,
+          "step": 0.1,
+          "default": 1,
+          "unit": "%",
+          "placeholder": "예: 1.0",
+          "templateMapping": ["[상환이자]"],
+          "helpText": "우선주 상환 시 적용할 이자율을 입력하세요"
+        },
+        "잔여분배이자": {
+          "type": "number",
+          "required": true,
+          "min": 0,
+          "max": 20,
+          "step": 0.1,
+          "default": 1,
+          "unit": "%",
+          "placeholder": "예: 1.0",
+          "templateMapping": ["[잔여분배이자]"],
+          "helpText": "잔여재산 분배 시 우선 배당 이자율을 입력하세요"
+        },
+        "주매청이자": {
+          "type": "number",
+          "required": true,
+          "min": 0,
+          "max": 30,
+          "step": 0.5,
+          "default": 10,
+          "unit": "%",
+          "placeholder": "예: 10.0",
+          "templateMapping": ["[주매청이자]"],
+          "helpText": "주매수청구권 행사 시 적용할 이자율을 입력하세요"
+        }
+      }
+    },
+    "operation_info": {
+      "title": "운영 정보",
+      "icon": "⚙️",
+      "order": 4,
+      "fields": {
+        "배당률": {
+          "type": "number",
+          "required": true,
+          "min": 0,
+          "max": 10,
+          "step": 0.1,
+          "default": 1,
+          "unit": "%",
+          "placeholder": "예: 1.0",
+          "templateMapping": ["[배당률]"],
+          "helpText": "우선주 배당률을 입력하세요"
+        },
+        "위약벌": {
+          "type": "number",
+          "required": true,
+          "min": 0,
+          "max": 50,
+          "step": 1,
+          "default": 10,
+          "unit": "%",
+          "placeholder": "예: 10",
+          "templateMapping": ["[위약벌]"],
+          "helpText": "계약 위반 시 적용할 위약벌 비율을 입력하세요"
+        },
+        "담당자투자총괄": {
+          "type": "text",
+          "required": true,
+          "maxLength": 30,
+          "validation": "^[가-힣a-zA-Z\\s]+$",
+          "placeholder": "담당자/투자총괄 이름을 입력하세요",
+          "templateMapping": ["[담당자]", "[투자총괄]"],
+          "helpText": "투자 담당자 또는 투자총괄의 이름을 입력하세요"
+        }
+      }
+    }
+  }
+} 

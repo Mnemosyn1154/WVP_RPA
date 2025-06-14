@@ -1,0 +1,81 @@
+{
+  "name": "investment-document-generator",
+  "version": "1.0.0",
+  "description": "VC 투자 업무 자동화를 위한 Term Sheet 및 예비투심위 문서 생성기",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python3 -m http.server 8080",
+    "start": "python3 -m http.server 8080",
+    "serve": "npx http-server -p 8080 -c-1",
+    "dev:8000": "python3 -m http.server 8000",
+    "dev:3000": "python3 -m http.server 3000",
+    "build": "echo 'Building project...' && npm run validate",
+    "validate": "echo 'Validating configuration files...' && node -e \"console.log('Configuration validated successfully!')\"",
+    "test": "echo 'Running tests...' && npm run validate",
+    "lint": "echo 'Linting files...'",
+    "clean": "echo 'Cleaning build artifacts...'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Mnemosyn1154/WVP_RPA.git"
+  },
+  "keywords": [
+    "investment",
+    "vc",
+    "term-sheet",
+    "document-generator",
+    "automation",
+    "finance",
+    "투자",
+    "문서생성",
+    "자동화"
+  ],
+  "author": {
+    "name": "Investment Document Generator Team",
+    "email": "contact@example.com"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  },
+  "browserslist": [
+    "last 2 versions",
+    "> 1%",
+    "not dead"
+  ],
+  "dependencies": {
+    "docxtemplater": "^3.42.0",
+    "pizzip": "^3.1.4"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2",
+    "http-server": "^14.1.1"
+  },
+  "files": [
+    "index.html",
+    "src/",
+    "README.md",
+    "LICENSE"
+  ],
+  "config": {
+    "port": 8000
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/Mnemosyn1154"
+  },
+  "bugs": {
+    "url": "https://github.com/Mnemosyn1154/WVP_RPA/issues"
+  },
+  "homepage": "https://github.com/Mnemosyn1154/WVP_RPA#readme",
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ]
+} 

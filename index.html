@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>투자문서 생성기 - VC Term Sheet & 예비투심위 자동화</title>
+    <meta name="description" content="VC 투자 업무의 Term Sheet와 예비투심위 보고서를 자동 생성하는 웹 애플리케이션">
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="src/assets/styles/variables.css">
+    <link rel="stylesheet" href="src/assets/styles/reset.css">
+    <link rel="stylesheet" href="src/assets/styles/layout.css">
+    <link rel="stylesheet" href="src/assets/styles/components.css">
+    <link rel="stylesheet" href="src/assets/styles/responsive.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="src/assets/favicon.ico">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-container">
+            <div class="logo">
+                <h1>💼 투자문서 생성기</h1>
+                <span class="version">v1.0</span>
+            </div>
+            <nav class="nav">
+                <button class="nav-button" data-action="help">도움말</button>
+                <button class="nav-button" data-action="settings">설정</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Progress Bar -->
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text">
+                <span id="progressText">0% 완료</span>
+                <span id="statusText">입력을 시작하세요</span>
+            </div>
+        </div>
+
+        <!-- Form Container -->
+        <div class="form-container" id="formContainer">
+            <!-- 동적으로 생성될 폼 섹션들 -->
+            <div class="loading" id="loadingSpinner">
+                <div class="spinner"></div>
+                <p>폼을 생성하는 중...</p>
+            </div>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="action-bar" id="actionBar" style="display: none;">
+            <div class="action-group">
+                <button class="btn btn-secondary" id="saveBtn">
+                    <span class="btn-icon">💾</span>
+                    임시저장
+                </button>
+                <button class="btn btn-secondary" id="loadBtn">
+                    <span class="btn-icon">📂</span>
+                    불러오기
+                </button>
+                <button class="btn btn-secondary" id="clearBtn">
+                    <span class="btn-icon">🗑️</span>
+                    초기화
+                </button>
+            </div>
+            
+            <div class="action-group">
+                <button class="btn btn-outline" id="previewBtn">
+                    <span class="btn-icon">👁️</span>
+                    미리보기
+                </button>
+                <button class="btn btn-primary" id="generateTermSheetBtn">
+                    <span class="btn-icon">📄</span>
+                    Term Sheet 생성
+                </button>
+                <button class="btn btn-primary" id="generatePreliminaryBtn">
+                    <span class="btn-icon">📋</span>
+                    예비투심위 생성
+                </button>
+                <button class="btn btn-success" id="generateAllBtn">
+                    <span class="btn-icon">📦</span>
+                    전체 생성
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <p>&copy; 2025 투자문서 생성기. Made with ❤️ for VC 업무 효율화</p>
+            <div class="footer-links">
+                <a href="#" data-action="about">소개</a>
+                <a href="#" data-action="contact">문의</a>
+                <a href="https://github.com/Mnemosyn1154/WVP_RPA" target="_blank">GitHub</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal Container -->
+    <div id="modalContainer"></div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="src/utils/helpers.js"></script>
+    <script src="src/utils/storage.js"></script>
+    <script src="src/utils/fileUtils.js"></script>
+    
+    <script src="src/components/Toast.js"></script>
+    <script src="src/components/Modal.js"></script>
+    <script src="src/components/Button.js"></script>
+    <script src="src/components/FormField.js"></script>
+    <script src="src/components/FormSection.js"></script>
+    
+    <script src="src/core/DataValidator.js"></script>
+    <script src="src/core/CalculationEngine.js"></script>
+    <script src="src/core/FormGenerator.js"></script>
+    <script src="src/core/TemplateProcessor.js"></script>
+    
+    <script src="src/app.js"></script>
+</body>
+</html> 

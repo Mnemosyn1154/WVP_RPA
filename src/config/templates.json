@@ -1,0 +1,77 @@
+{
+  "version": "1.0",
+  "lastUpdated": "2025-01-23",
+  "templates": {
+    "termsheet": {
+      "name": "Term Sheet",
+      "filename": "termsheet.docx",
+      "path": "src/templates/termsheet.docx",
+      "description": "VC 투자 Term Sheet 템플릿",
+      "outputFilename": "{투자대상}_TermSheet_{Series}_{date}.docx",
+      "variables": [
+        "[투자대상]", "[대표자]", "[주소]", "[Series]", "[사용용도]",
+        "[투자금액]", "[투자재원]", "[투자방식]", "[투자단가]", "[액면가]",
+        "[투자전가치]", "[투자후가치]", "[동반투자자]",
+        "[인수주식수]", "[지분율]", "[상환이자]", "[잔여분배이자]", "[주매청이자]",
+        "[배당률]", "[위약벌]", "[담당자]"
+      ],
+      "requiredFields": [
+        "투자대상", "대표자", "주소", "Series", "사용용도",
+        "투자금액", "투자재원", "투자방식", "투자단가", "액면가",
+        "투자전가치", "투자후가치", "인수주식수", "지분율",
+        "상환이자", "잔여분배이자", "주매청이자", "배당률", "위약벌", "담당자투자총괄"
+      ]
+    },
+    "preliminary": {
+      "name": "예비투심위 보고서",
+      "filename": "preliminary.docx",
+      "path": "src/templates/preliminary.docx",
+      "description": "예비투자심의위원회 보고서 템플릿",
+      "outputFilename": "{투자대상}_예비투심위_{Series}_{date}.docx",
+      "variables": [
+        "[투자대상]", "[대표자]", "[주소]", "[Series]", "[사용용도]",
+        "[투자금액]", "[투자재원]", "[투자방식]", "[투자단가]", "[액면가]",
+        "[투자전가치]", "[투자후가치]", "[동반투자자]",
+        "[인수주식수]", "[지분율]", "[상환이자]", "[잔여분배이자]", "[주매청이자]",
+        "[배당률]", "[위약벌]", "[담당자]"
+      ],
+      "requiredFields": [
+        "투자대상", "대표자", "주소", "Series", "사용용도",
+        "투자금액", "투자재원", "투자방식", "투자단가", "액면가",
+        "투자전가치", "투자후가치", "인수주식수", "지분율",
+        "상환이자", "잔여분배이자", "주매청이자", "배당률", "위약벌", "담당자투자총괄"
+      ]
+    }
+  },
+  "formatting": {
+    "date": {
+      "format": "YYYY-MM-DD",
+      "locale": "ko-KR"
+    },
+    "currency": {
+      "locale": "ko-KR",
+      "currency": "KRW",
+      "minimumFractionDigits": 0
+    },
+    "percentage": {
+      "minimumFractionDigits": 2,
+      "maximumFractionDigits": 2
+    },
+    "number": {
+      "locale": "ko-KR",
+      "useGrouping": true
+    }
+  },
+  "replacements": {
+    "date_variables": {
+      "[오늘날짜]": "현재 날짜",
+      "[작성일]": "현재 날짜",
+      "[계약일]": "현재 날짜"
+    },
+    "calculated_variables": {
+      "[총발행주식수]": "투자후가치 / 투자단가",
+      "[기존주주지분율]": "100 - 지분율",
+      "[프리미엄]": "투자단가 - 액면가"
+    }
+  }
+} 
