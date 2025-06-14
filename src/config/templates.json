@@ -1,11 +1,11 @@
 {
   "version": "1.0",
-  "lastUpdated": "2025-01-23",
+  "lastUpdated": "2025-06-14",
   "templates": {
     "termsheet": {
       "name": "Term Sheet",
-      "filename": "termsheet.docx",
-      "path": "src/templates/termsheet.docx",
+      "filename": "TermSheet_Template.docx",
+      "path": "src/templates/TermSheet_Template.docx",
       "description": "VC 투자 Term Sheet 템플릿",
       "outputFilename": "{투자대상}_TermSheet_{Series}_{date}.docx",
       "variables": [
@@ -24,8 +24,8 @@
     },
     "preliminary": {
       "name": "예비투심위 보고서",
-      "filename": "preliminary.docx",
-      "path": "src/templates/preliminary.docx",
+      "filename": "예비투심위_Template.docx",
+      "path": "src/templates/예비투심위_Template.docx",
       "description": "예비투자심의위원회 보고서 템플릿",
       "outputFilename": "{투자대상}_예비투심위_{Series}_{date}.docx",
       "variables": [
