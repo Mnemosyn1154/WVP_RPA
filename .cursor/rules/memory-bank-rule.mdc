@@ -1,0 +1,7 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+- 이 내용들 저장해줘라고 말하면 memory-bank에 작업내용 반영하고 github에 커밋하고 푸시하는 것을 말함'
+- 대화를 시작하기전 memory-bank의 task 내용들을 살펴보고 시작해
