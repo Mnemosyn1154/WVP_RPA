@@ -94,12 +94,47 @@ class DataValidator {
         const results = {};
         let hasErrors = false;
 
-        for (const [fieldName, value] of Object.entries(data)) {
-            const result = this.validateField(fieldName, value, data);
-            results[fieldName] = result;
-            
-            if (!result.isValid) {
+        // 빈 데이터 체크
+        if (!data || Object.keys(data).length === 0) {
+            return {
+                isValid: false,
+                fieldResults: {},
+                summary: {
+                    totalFields: 0,
+                    validFields: 0,
+                    invalidFields: 0,
+                    warnings: 0,
+                    errors: ['입력된 데이터가 없습니다. 폼을 작성해주세요.']
+                }
+            };
+        }
+
+        // 필수 필드 체크
+        const requiredFields = [
+            '투자대상', '대표자', '투자금액', '투자방식', '투자단가', 
+            '액면가', '투자전가치', '투자후가치', '담당자투자총괄'
+        ];
+
+        for (const fieldName of requiredFields) {
+            if (this.isEmpty(data[fieldName])) {
+                results[fieldName] = {
+                    isValid: false,
+                    errors: [`${fieldName}은(는) 필수 입력 항목입니다.`],
+                    warnings: []
+                };
                 hasErrors = true;
+            }
+        }
+
+        // 나머지 필드 검증
+        for (const [fieldName, value] of Object.entries(data)) {
+            if (!results[fieldName]) { // 이미 검증된 필수 필드는 제외
+                const result = this.validateField(fieldName, value, data);
+                results[fieldName] = result;
+                
+                if (!result.isValid) {
+                    hasErrors = true;
+                }
             }
         }
 
@@ -131,6 +166,11 @@ class DataValidator {
         }
 
         return summary;
+    }
+
+    // app.js에서 호출하는 validateForm 메서드 추가
+    validateForm(data) {
+        return this.validateAllFields(data);
     }
 
     // 유틸리티 메서드들

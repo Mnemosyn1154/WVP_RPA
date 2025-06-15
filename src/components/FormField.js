@@ -69,7 +69,7 @@ class FormField {
                 // 모든 숫자 필드는 text 타입으로 처리 (쉼표 포맷팅 지원)
                 return `<input type="text" ${commonAttrs} 
                     inputmode="numeric"
-                    pattern="[0-9,.-]*"
+                    pattern="[0-9,\\.\\-]*"
                     value="${config.value || ''}"
                 />`;
             

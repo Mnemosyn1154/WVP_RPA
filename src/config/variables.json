@@ -12,7 +12,7 @@
           "required": true,
           "maxLength": 50,
           "validation": "^[가-힣a-zA-Z0-9\\s\\(\\)\\-_]+$",
-          "placeholder": "투자대상 회사명을 입력하세요",
+          "placeholder": "예: 테크스타트업(주)",
           "templateMapping": ["[투자대상]", "[회사명]"],
           "helpText": "투자하려는 회사의 정확한 법인명을 입력하세요"
         },
@@ -21,7 +21,7 @@
           "required": true,
           "maxLength": 30,
           "validation": "^[가-힣a-zA-Z\\s]+$",
-          "placeholder": "대표자 성명을 입력하세요",
+          "placeholder": "예: 김철수",
           "templateMapping": ["[대표자]", "[대표자명]"],
           "helpText": "회사의 대표이사 성명을 입력하세요"
         },
@@ -29,7 +29,7 @@
           "type": "textarea",
           "required": true,
           "maxLength": 200,
-          "placeholder": "회사 주소를 입력하세요",
+          "placeholder": "예: 서울시 강남구 테헤란로 123, 10층",
           "templateMapping": ["[주소]", "[회사주소]"],
           "helpText": "회사의 본사 주소를 상세히 입력하세요"
         },
@@ -50,7 +50,7 @@
           "type": "textarea",
           "required": true,
           "maxLength": 500,
-          "placeholder": "투자금 사용 용도를 구체적으로 입력하세요",
+          "placeholder": "예: 서비스 개발, 마케팅, 인력 충원 등",
           "templateMapping": ["[사용용도]", "[투자목적]"],
           "helpText": "투자금이 어떤 용도로 사용될지 구체적으로 기술하세요"
         }
@@ -69,7 +69,7 @@
           "step": 0.1,
           "unit": "백만원",
           "format": "currency",
-          "placeholder": "예: 10 (10백만원)",
+          "placeholder": "예: 50",
           "templateMapping": ["[투자금액]"],
           "helpText": "투자하려는 금액을 백만원 단위로 입력하세요 (0보다 큰 값)",
           "currencyField": true,
@@ -104,7 +104,7 @@
           "max": 1000000,
           "step": 1,
           "unit": "원/주",
-          "placeholder": "예: 5000",
+          "placeholder": "예: 10000",
           "templateMapping": ["[투자단가]", "[주당가격]"],
           "helpText": "주당 투자 단가를 입력하세요",
           "currencyField": true,
@@ -118,6 +118,7 @@
           "max": 5000,
           "step": 100,
           "unit": "원",
+          "placeholder": "예: 500",
           "templateMapping": ["[액면가]"],
           "helpText": "주식의 액면가를 입력하세요 (일반적으로 500원)",
           "currencyField": true,
@@ -131,7 +132,7 @@
           "step": 0.1,
           "unit": "백만원",
           "format": "currency",
-          "placeholder": "예: 100 (100백만원)",
+          "placeholder": "예: 450",
           "templateMapping": ["[투자전가치]", "[Pre-money]"],
           "helpText": "투자 전 회사의 기업가치를 백만원 단위로 입력하세요 (0보다 큰 값)",
           "currencyField": true,
@@ -155,7 +156,7 @@
           "type": "text",
           "required": false,
           "maxLength": 100,
-          "placeholder": "동반투자자가 있는 경우 입력",
+          "placeholder": "예: ABC벤처캐피탈 (선택사항)",
           "templateMapping": ["[동반투자자]"],
           "helpText": "함께 투자하는 다른 투자자가 있다면 입력하세요"
         }
@@ -200,7 +201,7 @@
           "step": 0.1,
           "default": 1,
           "unit": "%",
-          "placeholder": "예: 1.0",
+          "placeholder": "예: 8.0",
           "templateMapping": ["[상환이자]"],
           "helpText": "우선주 상환 시 적용할 이자율을 입력하세요"
         },
@@ -224,7 +225,7 @@
           "step": 0.5,
           "default": 10,
           "unit": "%",
-          "placeholder": "예: 10.0",
+          "placeholder": "예: 8.0",
           "templateMapping": ["[주매청이자]"],
           "helpText": "주매수청구권 행사 시 적용할 이자율을 입력하세요"
         }
@@ -243,7 +244,7 @@
           "step": 0.1,
           "default": 1,
           "unit": "%",
-          "placeholder": "예: 1.0",
+          "placeholder": "예: 0.0",
           "templateMapping": ["[배당률]"],
           "helpText": "우선주 배당률을 입력하세요"
         },
@@ -255,7 +256,7 @@
           "step": 1,
           "default": 10,
           "unit": "%",
-          "placeholder": "예: 10",
+          "placeholder": "예: 20",
           "templateMapping": ["[위약벌]"],
           "helpText": "계약 위반 시 적용할 위약벌 비율을 입력하세요"
         },
@@ -264,7 +265,7 @@
           "required": true,
           "maxLength": 30,
           "validation": "^[가-힣a-zA-Z\\s]+$",
-          "placeholder": "담당자/투자총괄 이름을 입력하세요",
+          "placeholder": "예: 이영희 이사",
           "templateMapping": ["[담당자]", "[투자총괄]"],
           "helpText": "투자 담당자 또는 투자총괄의 이름을 입력하세요"
         }

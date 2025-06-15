@@ -384,9 +384,14 @@ class InvestmentDocumentApp {
   /**
    * 폼 데이터 초기화
    */
-  clearFormData() {
+  async clearFormData() {
     try {
-      if (confirm('모든 입력 데이터를 초기화하시겠습니까?')) {
+      const confirmed = await window.Modal.confirm(
+        '모든 입력 데이터를 초기화하시겠습니까?<br><span style="color: #666; font-size: 0.9em;">이 작업은 되돌릴 수 없습니다.</span>',
+        '🗑️ 데이터 초기화'
+      );
+      
+      if (confirmed) {
         this.formData = {};
         this.formGenerator.clearForm();
         this.storage.clear('formData');
@@ -425,18 +430,26 @@ class InvestmentDocumentApp {
    */
   async generateDocument(type) {
     try {
+      console.log('📝 문서 생성 시작:', type);
+      
+      // 실시간으로 폼 데이터 수집
+      const currentFormData = this.formGenerator.getAllFieldValues();
+      console.log('📊 실시간 폼 데이터:', currentFormData);
+      
       // 유효성 검증
-      const validationResult = this.dataValidator.validateForm(this.formData);
+      const validationResult = this.dataValidator.validateForm(currentFormData);
+      console.log('🔍 유효성 검증 결과:', validationResult);
+      
       if (!validationResult.isValid) {
-        this.showValidationErrors(validationResult.errors);
+        console.log('❌ 유효성 검증 실패');
+        this.showValidationErrors(validationResult);
         return;
       }
       
-      // 문서 생성
-      const document = await this.templateProcessor.generateDocument(type, this.formData);
+      console.log('✅ 유효성 검증 통과 - 문서 생성 진행');
       
-      // 다운로드
-      this.downloadDocument(document, type);
+      // 문서 생성 (다운로드는 TemplateProcessor에서 처리)
+      await this.templateProcessor.generateDocument(type, currentFormData);
       
       this.showToast(`${type === 'termsheet' ? 'Term Sheet' : '예비투심위 보고서'}가 생성되었습니다.`, 'success');
       
@@ -451,9 +464,35 @@ class InvestmentDocumentApp {
    */
   async generateAllDocuments() {
     try {
-      await this.generateDocument('termsheet');
+      // 실시간으로 폼 데이터 수집
+      const currentFormData = this.formGenerator.getAllFieldValues();
+      console.log('📊 전체 문서 생성용 폼 데이터:', currentFormData);
+      
+      // 유효성 검증 (한 번만 수행)
+      const validationResult = this.dataValidator.validateForm(currentFormData);
+      console.log('🔍 전체 문서 생성 유효성 검증 결과:', validationResult);
+      
+      if (!validationResult.isValid) {
+        console.log('❌ 유효성 검증 실패 - 전체 문서 생성 중단');
+        this.showValidationErrors(validationResult);
+        return;
+      }
+      
+      // 사용자 확인
+      const confirmed = await window.Modal.confirm(
+        '모든 문서를 생성하시겠습니까?',
+        '📄 전체 문서 생성'
+      );
+      
+      if (!confirmed) {
+        return;
+      }
+      
+      console.log('✅ 유효성 검증 통과 - 전체 문서 생성 진행');
+      
+      await this.templateProcessor.generateDocument('termsheet', currentFormData);
       await InvestmentHelpers.delay(500); // 잠시 대기
-      await this.generateDocument('preliminary');
+      await this.templateProcessor.generateDocument('preliminary', currentFormData);
       
       this.showToast('모든 문서가 생성되었습니다.', 'success');
       
@@ -490,11 +529,16 @@ class InvestmentDocumentApp {
 
   /**
    * 유효성 검증 오류 표시
-   * @param {Array} errors - 오류 목록
+   * @param {Object} validationResult - 검증 결과
    */
-  showValidationErrors(errors) {
-    const errorMessages = errors.map(error => error.message).join('\n');
-    alert(`입력 오류:\n${errorMessages}`);
+  showValidationErrors(validationResult) {
+    const errors = validationResult.summary.errors;
+    const errorMessages = errors.map(error => `• ${error}`).join('<br>');
+    
+    window.Modal.alert(
+      `<div style="text-align: left; line-height: 1.6;">${errorMessages}</div>`,
+      '⚠️ 입력 오류'
+    );
   }
 
   /**
@@ -510,34 +554,9 @@ class InvestmentDocumentApp {
     };
   }
 
-  /**
-   * 문서 다운로드
-   * @param {Blob} document - 문서 Blob
-   * @param {string} type - 문서 타입
-   */
-  downloadDocument(document, type) {
-    const filename = this.generateFilename(type);
-    const url = URL.createObjectURL(document);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
+  // downloadDocument 메서드 제거됨 - TemplateProcessor에서 처리
 
-  /**
-   * 파일명 생성
-   * @param {string} type - 문서 타입
-   * @returns {string} 파일명
-   */
-  generateFilename(type) {
-    const template = this.templatesConfig.templates[type].outputFilename;
-    const date = InvestmentHelpers.getCurrentDate();
-    return InvestmentHelpers.replaceTemplate(template, {
-      ...this.formData,
-      date
-    });
-  }
+  // generateFilename 메서드 제거됨 - TemplateProcessor에서 처리
 
   /**
    * 토스트 메시지 표시
@@ -576,6 +595,21 @@ if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
     getFormData: () => window.investmentApp.formData,
     setFormData: (data) => { window.investmentApp.formData = data; },
     getProgress: () => window.investmentApp.progress,
-    testValidation: () => window.investmentApp.dataValidator.validateForm(window.investmentApp.formData)
+    testValidation: () => {
+      console.log('🧪 유효성 검증 테스트');
+      const result = window.investmentApp.dataValidator.validateForm(window.investmentApp.formData);
+      console.log('검증 결과:', result);
+      return result;
+    },
+    showCurrentData: () => {
+      console.log('📊 현재 폼 데이터:');
+      console.table(window.investmentApp.formData);
+      console.log('총 필드 수:', Object.keys(window.investmentApp.formData).length);
+    },
+    clearData: () => {
+      window.investmentApp.formData = {};
+      window.investmentApp.updateProgress();
+      console.log('🗑️ 폼 데이터 초기화 완료');
+    }
   };
 } 
