@@ -351,7 +351,8 @@ class InvestmentDocumentApp {
    */
   saveFormData() {
     try {
-      this.storage.save('formData', this.formData);
+      // StorageManager.save() expects only data as the first argument
+      this.storage.save(this.formData);
       this.showToast('데이터가 임시저장되었습니다.', 'success');
       
     } catch (error) {
@@ -365,7 +366,8 @@ class InvestmentDocumentApp {
    */
   loadFormData() {
     try {
-      const savedData = this.storage.load('formData');
+      // StorageManager.load() returns the saved data without parameters
+      const savedData = this.storage.load();
       if (savedData) {
         this.formData = savedData;
         this.formGenerator.populateForm(savedData);
@@ -393,8 +395,10 @@ class InvestmentDocumentApp {
       
       if (confirmed) {
         this.formData = {};
-        this.formGenerator.clearForm();
-        this.storage.clear('formData');
+        // FormGenerator provides resetForm to clear all field values
+        this.formGenerator.resetForm();
+        // Remove saved data from StorageManager
+        this.storage.clearAll();
         this.updateProgress();
         this.showToast('데이터가 초기화되었습니다.', 'info');
       }
@@ -507,9 +511,12 @@ class InvestmentDocumentApp {
    */
   restoreFormData() {
     try {
-      const savedData = this.storage.load('formData');
+      // Retrieve previously saved data if available
+      const savedData = this.storage.load();
       if (savedData) {
         this.formData = savedData;
+        // Populate the form so that values are visible to the user
+        this.formGenerator.populateForm(savedData);
         this.updateProgress();
         console.log('💾 저장된 데이터 복원 완료');
       }
