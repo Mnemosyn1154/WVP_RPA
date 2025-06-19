@@ -37,16 +37,31 @@ class CurrencyManager {
                 code: 'KRW',
                 name: '한국 원',
                 symbol: '₩',
-                unit: '백만원',
-                baseUnit: '원',
-                multiplier: 1000000,
-                decimalPlaces: 0,
-                format: {
-                    prefix: '',
-                    suffix: '백만원',
-                    separator: ',',
-                    decimal: '.'
-                }
+                units: {
+                    base: {
+                        unit: '원',
+                        suffix: '원',
+                        multiplier: 1,
+                        format: {
+                            prefix: '',
+                            suffix: '원',
+                            separator: ',',
+                            decimal: '.'
+                        }
+                    },
+                    large: {
+                        unit: '억원',
+                        suffix: '억원',
+                        multiplier: 100000000,
+                        format: {
+                            prefix: '',
+                            suffix: '억원',
+                            separator: ',',
+                            decimal: '.'
+                        }
+                    }
+                },
+                decimalPlaces: 0
             }
         };
         this.currentCurrency = 'KRW';
@@ -90,25 +105,53 @@ class CurrencyManager {
     /**
      * 값을 현재 화폐 형식으로 포맷팅
      * @param {number} value - 포맷팅할 값 (표시 단위 기준)
+     * @param {string} fieldType - 필드 타입 (investment_amount, price_per_share 등)
      * @param {boolean} includeUnit - 단위 포함 여부
      */
-    formatValue(value, includeUnit = true) {
+    formatValue(value, fieldType = 'investment_amount', includeUnit = true) {
         const currency = this.getCurrentCurrency();
         if (!currency) return value.toString();
 
+        const unitInfo = this.getUnitForField(fieldType);
         const formattedNumber = this.formatNumber(value, currency.decimalPlaces);
         
         let result = formattedNumber;
         
-        if (currency.format.prefix) {
-            result = currency.format.prefix + result;
+        if (unitInfo.format.prefix) {
+            result = unitInfo.format.prefix + result;
         }
         
-        if (includeUnit && currency.format.suffix) {
-            result = result + currency.format.suffix;
+        if (includeUnit && unitInfo.format.suffix) {
+            result = result + unitInfo.format.suffix;
         }
         
         return result;
+    }
+
+    /**
+     * 필드 타입에 따른 단위 정보 반환
+     * @param {string} fieldType - 필드 타입
+     * @returns {Object} 단위 정보
+     */
+    getUnitForField(fieldType) {
+        const currency = this.getCurrentCurrency();
+        if (!currency || !currency.units) return null;
+
+        // 필드 타입별 단위 결정
+        const range = currency.ranges?.[fieldType];
+        const unitType = range?.unit || 'large'; // 기본값은 large 단위
+        
+        return currency.units[unitType];
+    }
+
+    /**
+     * 필드의 단위 표시 문자열 반환
+     * @param {string} fieldType - 필드 타입
+     * @returns {string} 단위 문자열
+     */
+    getUnitString(fieldType) {
+        const unitInfo = this.getUnitForField(fieldType);
+        return unitInfo?.unit || '';
     }
 
     /**
@@ -132,22 +175,26 @@ class CurrencyManager {
 
     /**
      * 표시 단위 값을 기본 단위로 변환
-     * @param {number} displayValue - 표시 단위 값 (예: 10백만원)
-     * @returns {number} 기본 단위 값 (예: 10000000원)
+     * @param {number} displayValue - 표시 단위 값 (예: 5억원)
+     * @param {string} fieldType - 필드 타입
+     * @returns {number} 기본 단위 값 (예: 500000000원)
      */
-    toBaseUnit(displayValue) {
-        const currency = this.getCurrentCurrency();
-        return displayValue * currency.multiplier;
+    toBaseUnit(displayValue, fieldType = 'investment_amount') {
+        const unitInfo = this.getUnitForField(fieldType);
+        if (!unitInfo) return displayValue;
+        return displayValue * unitInfo.multiplier;
     }
 
     /**
      * 기본 단위 값을 표시 단위로 변환
-     * @param {number} baseValue - 기본 단위 값 (예: 10000000원)
-     * @returns {number} 표시 단위 값 (예: 10백만원)
+     * @param {number} baseValue - 기본 단위 값 (예: 500000000원)
+     * @param {string} fieldType - 필드 타입
+     * @returns {number} 표시 단위 값 (예: 5억원)
      */
-    toDisplayUnit(baseValue) {
-        const currency = this.getCurrentCurrency();
-        return baseValue / currency.multiplier;
+    toDisplayUnit(baseValue, fieldType = 'investment_amount') {
+        const unitInfo = this.getUnitForField(fieldType);
+        if (!unitInfo) return baseValue;
+        return baseValue / unitInfo.multiplier;
     }
 
     /**

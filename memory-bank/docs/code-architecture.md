@@ -303,8 +303,8 @@ class StorageManager {
     "KRW": {
       "code": "KRW",
       "name": "한국 원",
-      "unit": "백만원",
-      "multiplier": 1000000
+      "unit": "억원",
+      "multiplier": 100000000
     }
   },
   "fieldRanges": {

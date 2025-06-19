@@ -7,13 +7,6 @@ class CalculationEngine {
     constructor() {
         this.currencyManager = window.CurrencyManager;
         this.calculationRules = {
-            // 투자후가치 = 투자전가치 + 투자금액 (백만원 단위)
-            '투자후가치': (data) => {
-                const preMoney = this.parseNumber(data.투자전가치);
-                const investment = this.parseNumber(data.투자금액);
-                return preMoney + investment;
-            },
-            
             // 지분율 = 투자금액 / 투자후가치 * 100
             '지분율': (data) => {
                 const investment = this.parseNumber(data.투자금액);
@@ -21,13 +14,13 @@ class CalculationEngine {
                 return (investment / postMoney) * 100;
             },
             
-            // 인수주식수 = 투자금액(백만원) * 1,000,000 / 투자단가(원)
+            // 인수주식수 = 투자금액(억원) * 100,000,000 / 투자단가(원)
             '인수주식수': (data) => {
-                const investmentInMillion = this.parseNumber(data.투자금액);
+                const investmentInEok = this.parseNumber(data.투자금액);
                 const pricePerShare = this.parseNumber(data.투자단가);
                 
-                // 백만원을 원으로 변환하여 계산
-                const investmentInWon = investmentInMillion * 1000000;
+                // 억원을 원으로 변환하여 계산
+                const investmentInWon = investmentInEok * 100000000;
                 return Math.floor(investmentInWon / pricePerShare);
             }
         };
@@ -99,7 +92,6 @@ class CalculationEngine {
      */
     getDependencies(fieldName) {
         const dependencies = {
-            '투자후가치': ['투자전가치', '투자금액'],
             '지분율': ['투자금액', '투자후가치'],
             '인수주식수': ['투자금액', '투자단가']
         };
@@ -194,7 +186,6 @@ class CalculationEngine {
      */
     getTolerance(fieldName) {
         const tolerances = {
-            '투자후가치': 1000,      // 1천원
             '지분율': 0.01,          // 0.01%
             '인수주식수': 1          // 1주
         };
