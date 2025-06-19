@@ -465,45 +465,9 @@ class FormGenerator {
     }
 
     setupEventListeners() {
-        // 저장 버튼
-        const saveBtn = document.getElementById('saveBtn');
-        if (saveBtn) {
-            saveBtn.addEventListener('click', () => this.saveData());
-        }
-
-        // 불러오기 버튼
-        const loadBtn = document.getElementById('loadBtn');
-        if (loadBtn) {
-            loadBtn.addEventListener('click', () => this.loadData());
-        }
-
-        // 초기화 버튼
-        const clearBtn = document.getElementById('clearBtn');
-        if (clearBtn) {
-            clearBtn.addEventListener('click', () => this.clearData());
-        }
-
-        // 미리보기 버튼
-        const previewBtn = document.getElementById('previewBtn');
-        if (previewBtn) {
-            previewBtn.addEventListener('click', () => this.showPreview());
-        }
-
-        // 문서 생성 버튼들
-        const generateTermSheetBtn = document.getElementById('generateTermSheetBtn');
-        if (generateTermSheetBtn) {
-            generateTermSheetBtn.addEventListener('click', () => this.generateDocument('termsheet'));
-        }
-
-        const generatePreliminaryBtn = document.getElementById('generatePreliminaryBtn');
-        if (generatePreliminaryBtn) {
-            generatePreliminaryBtn.addEventListener('click', () => this.generateDocument('preliminary'));
-        }
-
-        const generateAllBtn = document.getElementById('generateAllBtn');
-        if (generateAllBtn) {
-            generateAllBtn.addEventListener('click', () => this.generateAllDocuments());
-        }
+        // 이벤트 리스너는 app.js에서 중앙 관리
+        // 중복 등록 방지를 위해 이 메서드는 비워둠
+        console.log('🎧 이벤트 리스너 설정 완료 (app.js에서 중앙 관리)');
     }
 
     saveData() {

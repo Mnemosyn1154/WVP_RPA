@@ -263,7 +263,7 @@ class InvestmentDocumentApp {
       saveBtn: () => this.saveFormData(),
       loadBtn: () => this.loadFormData(),
       clearBtn: () => this.clearFormData(),
-      previewBtn: () => this.previewDocuments(),
+      previewBtn: () => this.formGenerator.showPreview(),
       generateTermSheetBtn: () => this.generateDocument('termsheet'),
       generatePreliminaryBtn: () => this.generateDocument('preliminary'),
       generateAllBtn: () => this.generateAllDocuments()
@@ -272,6 +272,8 @@ class InvestmentDocumentApp {
     Object.entries(buttons).forEach(([id, handler]) => {
       const element = document.getElementById(id);
       if (element) {
+        // 기존 이벤트 리스너 제거 (중복 방지)
+        element.removeEventListener('click', handler);
         element.addEventListener('click', handler);
       }
     });
