@@ -114,10 +114,19 @@ class TemplateProcessor {
             return numericValue.toFixed(2) + '%';
         }
         
-        // 통화 필드
-        const currencyFields = ['투자금액', '투자전가치', '투자후가치', '투자단가', '액면가'];
-        if (currencyFields.includes(fieldName)) {
-            return new Intl.NumberFormat('ko-KR').format(numericValue) + '원';
+        // 통화 필드 - CurrencyManager를 통한 동적 단위 처리
+        const currencyFields = {
+            '투자금액': 'investment_amount',
+            '투자전가치': 'company_valuation', 
+            '투자후가치': 'company_valuation',
+            '투자단가': 'price_per_share',
+            '액면가': 'par_value'
+        };
+        
+        if (currencyFields[fieldName]) {
+            const fieldType = currencyFields[fieldName];
+            const unitSuffix = this.getCurrencyUnitSuffix(fieldType);
+            return new Intl.NumberFormat('ko-KR').format(numericValue) + unitSuffix;
         }
         
         // 주식수
@@ -248,7 +257,8 @@ class TemplateProcessor {
             const parValue = this.parseNumericValue(templateData['액면가']);
             if (pricePerShare > 0 && parValue > 0) {
                 const premium = pricePerShare - parValue;
-                templateData['프리미엄'] = premium.toLocaleString('ko-KR') + '원';
+                const unitSuffix = this.getCurrencyUnitSuffix('price_per_share');
+                templateData['프리미엄'] = premium.toLocaleString('ko-KR') + unitSuffix;
             }
         }
         
@@ -269,6 +279,37 @@ class TemplateProcessor {
         const numStr = value.toString().replace(/[,원주%\s]/g, '');
         const num = parseFloat(numStr);
         return isNaN(num) ? 0 : num;
+    }
+
+    /**
+     * CurrencyManager에서 필드 타입에 맞는 단위 suffix 가져오기
+     * @param {string} fieldType - 필드 타입 (investment_amount, price_per_share 등)
+     * @returns {string} 단위 suffix (예: '억원', '원', '$M' 등)
+     */
+    getCurrencyUnitSuffix(fieldType) {
+        try {
+            // CurrencyManager가 로드되어 있는지 확인
+            if (typeof window.CurrencyManager !== 'undefined' && window.CurrencyManager.getUnitForField) {
+                const unitInfo = window.CurrencyManager.getUnitForField(fieldType);
+                if (unitInfo && unitInfo.suffix) {
+                    return unitInfo.suffix;
+                }
+            }
+            
+            // CurrencyManager가 없거나 단위 정보를 찾을 수 없는 경우 기본값 반환
+            const defaultUnits = {
+                'investment_amount': '억원',
+                'company_valuation': '억원',
+                'price_per_share': '원',
+                'par_value': '원'
+            };
+            
+            return defaultUnits[fieldType] || '원';
+            
+        } catch (error) {
+            console.warn('단위 suffix 가져오기 실패, 기본값 사용:', error);
+            return '원';
+        }
     }
 
     addMetadataToBuffer(templateBuffer, data) {
