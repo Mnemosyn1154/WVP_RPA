@@ -239,9 +239,9 @@ class InvestmentDocumentApp {
       // 버튼 클릭 이벤트
       this.attachButtonListeners();
       
-      // 윈도우 이벤트
+      // 윈도우 이벤트 - 페이지 종료 시 LocalStorage에만 백업 저장
       window.addEventListener('beforeunload', () => {
-        this.saveFormData();
+        this.createEmergencyBackup();
       });
       
       window.addEventListener('resize', InvestmentHelpers.debounce(() => {
@@ -260,9 +260,9 @@ class InvestmentDocumentApp {
    */
   attachButtonListeners() {
     const buttons = {
-      saveBtn: () => this.saveFormData(),
-      loadBtn: () => this.loadFormData(),
-      clearBtn: () => this.clearFormData(),
+      saveBtn: async () => await this.saveFormData(),
+      loadBtn: async () => await this.loadFormData(), 
+      clearBtn: async () => await this.clearFormData(),
       previewBtn: () => this.formGenerator.showPreview(),
       generateTermSheetBtn: () => this.generateDocument('termsheet'),
       generatePreliminaryBtn: () => this.generateDocument('preliminary'),
@@ -349,37 +349,46 @@ class InvestmentDocumentApp {
   }
 
   /**
-   * 폼 데이터 저장
+   * 폼 데이터를 Excel 파일로 저장
    */
-  saveFormData() {
+  async saveFormData() {
     try {
-      this.storage.save('formData', this.formData);
-      this.showToast('데이터가 임시저장되었습니다.', 'success');
+      // 현재 폼 데이터 수집
+      const currentFormData = this.formGenerator.getAllFieldValues();
+      
+      if (Object.keys(currentFormData).length === 0) {
+        this.showToast('저장할 데이터가 없습니다.', 'warning');
+        return;
+      }
+
+      console.log('💾 Excel 파일로 저장 시작');
+      
+      // FileManager를 통해 Excel 파일로 저장
+      const filename = await window.FileManager.saveToExcel(currentFormData);
+      
+      this.showToast(`'${filename}' 파일로 저장되었습니다.`, 'success');
       
     } catch (error) {
-      console.error('폼 데이터 저장 실패:', error);
-      this.showToast('데이터 저장에 실패했습니다.', 'error');
+      console.error('Excel 파일 저장 실패:', error);
+      this.showToast(`파일 저장에 실패했습니다: ${error.message}`, 'error');
     }
   }
 
   /**
-   * 폼 데이터 불러오기
+   * Excel 파일에서 폼 데이터 불러오기
    */
-  loadFormData() {
+  async loadFormData() {
     try {
-      const savedData = this.storage.load('formData');
-      if (savedData) {
-        this.formData = savedData;
-        this.formGenerator.populateForm(savedData);
-        this.updateProgress();
-        this.showToast('저장된 데이터를 불러왔습니다.', 'success');
-      } else {
-        this.showToast('저장된 데이터가 없습니다.', 'info');
-      }
+      console.log('📂 Excel 파일에서 불러오기 시작');
+      
+      // FileManager를 통해 파일 선택 다이얼로그 열기
+      await window.FileManager.loadFromExcel();
+      
+      // 파일 선택 및 처리는 FileManager에서 비동기적으로 처리됩니다.
       
     } catch (error) {
-      console.error('폼 데이터 불러오기 실패:', error);
-      this.showToast('데이터 불러오기에 실패했습니다.', 'error');
+      console.error('Excel 파일 불러오기 실패:', error);
+      this.showToast(`파일 불러오기에 실패했습니다: ${error.message}`, 'error');
     }
   }
 
@@ -396,7 +405,6 @@ class InvestmentDocumentApp {
       if (confirmed) {
         this.formData = {};
         this.formGenerator.clearForm();
-        this.storage.clear('formData');
         this.updateProgress();
         this.showToast('데이터가 초기화되었습니다.', 'info');
       }
@@ -438,26 +446,22 @@ class InvestmentDocumentApp {
       const currentFormData = this.formGenerator.getAllFieldValues();
       console.log('📊 실시간 폼 데이터:', currentFormData);
       
-      // 유효성 검증
-      const validationResult = this.dataValidator.validateForm(currentFormData);
-      console.log('🔍 유효성 검증 결과:', validationResult);
+      // 실시간 검증은 제거 - TemplateProcessor에서 템플릿별 검증 수행
+      console.log('✅ 폼 데이터 수집 완료 - 템플릿별 검증은 TemplateProcessor에서 수행');
       
-      if (!validationResult.isValid) {
-        console.log('❌ 유효성 검증 실패');
-        this.showValidationErrors(validationResult);
-        return;
-      }
-      
-      console.log('✅ 유효성 검증 통과 - 문서 생성 진행');
-      
-      // 문서 생성 (다운로드는 TemplateProcessor에서 처리)
+      // 문서 생성 (TemplateProcessor에서 템플릿별 검증 수행)
       await this.templateProcessor.generateDocument(type, currentFormData);
       
-      this.showToast(`${type === 'termsheet' ? 'Term Sheet' : '예비투심위 보고서'}가 생성되었습니다.`, 'success');
+      const templateName = type === 'termsheet' ? 'Term Sheet' : '예비투심위 보고서';
+      this.showToast(`${templateName}가 생성되었습니다.`, 'success');
       
     } catch (error) {
       console.error('문서 생성 실패:', error);
-      this.showToast('문서 생성에 실패했습니다.', 'error');
+      
+      // 오류 메시지는 TemplateProcessor에서 이미 처리되므로 간단한 토스트만 표시
+      if (!error.message.includes('생성에 필요한 필수 정보가 부족')) {
+        this.showToast('문서 생성에 실패했습니다.', 'error');
+      }
     }
   }
 
@@ -470,19 +474,18 @@ class InvestmentDocumentApp {
       const currentFormData = this.formGenerator.getAllFieldValues();
       console.log('📊 전체 문서 생성용 폼 데이터:', currentFormData);
       
-      // 유효성 검증 (한 번만 수행)
-      const validationResult = this.dataValidator.validateForm(currentFormData);
-      console.log('🔍 전체 문서 생성 유효성 검증 결과:', validationResult);
-      
-      if (!validationResult.isValid) {
-        console.log('❌ 유효성 검증 실패 - 전체 문서 생성 중단');
-        this.showValidationErrors(validationResult);
+      // 기본 데이터 존재 여부만 체크
+      if (!currentFormData || Object.keys(currentFormData).length === 0) {
+        this.showToast('입력된 데이터가 없습니다. 폼을 작성해주세요.', 'warning');
         return;
       }
       
       // 사용자 확인
       const confirmed = await window.Modal.confirm(
-        '모든 문서를 생성하시겠습니까?',
+        '모든 문서를 생성하시겠습니까?<br><br>' +
+        '<small style="color: #666;">• Term Sheet (간결형 - 14개 필수 필드)</small><br>' +
+        '<small style="color: #666;">• 예비투심위 보고서 (완전형 - 20개 필수 필드)</small><br><br>' +
+        '<small style="color: #999;">각 문서별로 필요한 필드가 부족한 경우 개별적으로 안내됩니다.</small>',
         '📄 전체 문서 생성'
       );
       
@@ -490,17 +493,46 @@ class InvestmentDocumentApp {
         return;
       }
       
-      console.log('✅ 유효성 검증 통과 - 전체 문서 생성 진행');
+      console.log('✅ 사용자 확인 완료 - 전체 문서 생성 진행');
       
-      await this.templateProcessor.generateDocument('termsheet', currentFormData);
-      await InvestmentHelpers.delay(500); // 잠시 대기
-      await this.templateProcessor.generateDocument('preliminary', currentFormData);
+      let successCount = 0;
+      let failCount = 0;
       
-      this.showToast('모든 문서가 생성되었습니다.', 'success');
+      // Term Sheet 생성 시도
+      try {
+        await this.templateProcessor.generateDocument('termsheet', currentFormData);
+        successCount++;
+        console.log('✅ Term Sheet 생성 성공');
+      } catch (error) {
+        failCount++;
+        console.error('❌ Term Sheet 생성 실패:', error);
+      }
+      
+      // 잠시 대기
+      await InvestmentHelpers.delay(500);
+      
+      // 예비투심위 보고서 생성 시도
+      try {
+        await this.templateProcessor.generateDocument('preliminary', currentFormData);
+        successCount++;
+        console.log('✅ 예비투심위 보고서 생성 성공');
+      } catch (error) {
+        failCount++;
+        console.error('❌ 예비투심위 보고서 생성 실패:', error);
+      }
+      
+      // 결과 안내
+      if (successCount === 2) {
+        this.showToast('모든 문서가 성공적으로 생성되었습니다! 🎉', 'success');
+      } else if (successCount === 1) {
+        this.showToast(`${successCount}개 문서가 생성되었습니다. (실패: ${failCount}개)`, 'warning');
+      } else {
+        this.showToast('문서 생성에 실패했습니다. 필수 필드를 확인해주세요.', 'error');
+      }
       
     } catch (error) {
       console.error('전체 문서 생성 실패:', error);
-      this.showToast('일부 문서 생성에 실패했습니다.', 'error');
+      this.showToast('전체 문서 생성 중 오류가 발생했습니다.', 'error');
     }
   }
 
@@ -518,6 +550,34 @@ class InvestmentDocumentApp {
       
     } catch (error) {
       console.error('데이터 복원 실패:', error);
+    }
+  }
+
+  /**
+   * 페이지 종료 시 응급 백업 생성 (LocalStorage만 사용)
+   */
+  createEmergencyBackup() {
+    try {
+      // 현재 폼 데이터 수집
+      const currentFormData = this.formGenerator?.getAllFieldValues();
+      
+      if (currentFormData && Object.keys(currentFormData).length > 0) {
+        // 응급 백업 데이터 생성
+        const backupData = {
+          ...currentFormData,
+          _emergency_backup: {
+            timestamp: new Date().toISOString(),
+            type: 'beforeunload_backup'
+          }
+        };
+        
+        // LocalStorage에 저장 (파일 다이얼로그 없이)
+        localStorage.setItem('investment_emergency_backup', JSON.stringify(backupData));
+        console.log('💾 응급 백업 저장 완료');
+      }
+      
+    } catch (error) {
+      console.warn('⚠️ 응급 백업 저장 실패:', error);
     }
   }
 

@@ -16,10 +16,13 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💼</text></svg>">
     
-    <!-- docxtemplater 라이브러리 -->
+    <!-- 외부 라이브러리 -->
     <script src="https://unpkg.com/pizzip@3.1.6/dist/pizzip.js"></script>
     <script src="https://unpkg.com/docxtemplater@3.44.0/build/docxtemplater.js"></script>
     <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    
+    <!-- xlsx-js-style (SheetJS + 스타일링 지원) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 </head>
 <body>
     <!-- Header -->
@@ -66,11 +69,11 @@
             <div class="action-group">
                 <button class="btn btn-secondary" id="saveBtn">
                     <span class="btn-icon">💾</span>
-                    임시저장
+                    Excel로 저장
                 </button>
                 <button class="btn btn-secondary" id="loadBtn">
                     <span class="btn-icon">📂</span>
-                    불러오기
+                    Excel에서 열기
                 </button>
                 <button class="btn btn-secondary" id="clearBtn">
                     <span class="btn-icon">🗑️</span>
@@ -83,18 +86,27 @@
                     <span class="btn-icon">👁️</span>
                     미리보기
                 </button>
-                <button class="btn btn-primary" id="generateTermSheetBtn">
-                    <span class="btn-icon">📄</span>
-                    Term Sheet 생성
-                </button>
-                <button class="btn btn-primary" id="generatePreliminaryBtn">
-                    <span class="btn-icon">📋</span>
-                    예비투심위 생성
-                </button>
-                <button class="btn btn-success" id="generateAllBtn">
-                    <span class="btn-icon">📦</span>
-                    전체 생성
-                </button>
+                <div class="btn-with-info">
+                    <button class="btn btn-primary" id="generateTermSheetBtn">
+                        <span class="btn-icon">📄</span>
+                        Term Sheet 생성
+                    </button>
+                    <small class="btn-info">간결형 (14개 필수)</small>
+                </div>
+                <div class="btn-with-info">
+                    <button class="btn btn-primary" id="generatePreliminaryBtn">
+                        <span class="btn-icon">📋</span>
+                        예비투심위 생성
+                    </button>
+                    <small class="btn-info">완전형 (20개 필수)</small>
+                </div>
+                <div class="btn-with-info">
+                    <button class="btn btn-success" id="generateAllBtn">
+                        <span class="btn-icon">📦</span>
+                        전체 생성
+                    </button>
+                    <small class="btn-info">두 문서 모두</small>
+                </div>
             </div>
         </div>
     </main>
@@ -116,12 +128,17 @@
 
     <!-- Toast Container -->
     <div id="toastContainer" class="toast-container"></div>
+    
+    <!-- 파일 업로드용 숨겨진 Input -->
+    <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none;">
 
     <!-- Scripts -->
     <script src="src/utils/helpers.js"></script>
     <script src="src/utils/storage.js"></script>
     <script src="src/utils/fileUtils.js"></script>
     <script src="src/utils/CurrencyManager.js"></script>
+    <script src="src/utils/ExcelProcessor.js"></script>
+    <script src="src/utils/FileManager.js"></script>
     
     <script src="src/components/Toast.js"></script>
     <script src="src/components/Modal.js"></script>

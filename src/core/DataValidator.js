@@ -112,7 +112,7 @@ class DataValidator {
         // 필수 필드 체크
         const requiredFields = [
             '투자대상', '대표자', '투자금액', '투자방식', '투자단가', 
-            '액면가', '투자전가치', '투자후가치', '담당자투자총괄'
+            '액면가', '투자전가치', '투자후가치', '투자총괄'
         ];
 
         for (const fieldName of requiredFields) {
@@ -173,11 +173,139 @@ class DataValidator {
         return this.validateAllFields(data);
     }
 
+    /**
+     * 템플릿별 필수 필드 검증
+     * @param {Object} data - 검증할 데이터
+     * @param {string} templateType - 템플릿 타입 ('termsheet' 또는 'preliminary')
+     * @returns {Object} 검증 결과
+     */
+    validateForTemplate(data, templateType) {
+        const results = {};
+        let hasErrors = false;
+
+        // 템플릿별 필수 필드 정의
+        const templateRequiredFields = {
+            'termsheet': [
+                '투자대상', '대표자', '투자금액', '투자방식', '투자단가', '액면가',
+                '투자전가치', '투자후가치', '인수주식수', '지분율',
+                '상환이자', '잔여분배이자', '주매청이자', '투자총괄'
+            ],
+            'preliminary': [
+                '투자대상', '대표자', '주소', 'Series', '사용용도',
+                '투자금액', '투자재원', '투자방식', '투자단가', '액면가',
+                '투자전가치', '투자후가치', '인수주식수', '지분율',
+                '상환이자', '잔여분배이자', '주매청이자', '배당률', '위약벌', '투자총괄'
+            ]
+        };
+
+        const requiredFields = templateRequiredFields[templateType];
+        
+        if (!requiredFields) {
+            return {
+                isValid: false,
+                fieldResults: {},
+                summary: {
+                    totalFields: 0,
+                    validFields: 0,
+                    invalidFields: 0,
+                    warnings: 0,
+                    errors: [`지원하지 않는 템플릿 타입입니다: ${templateType}`]
+                }
+            };
+        }
+
+        // 빈 데이터 체크
+        if (!data || Object.keys(data).length === 0) {
+            return {
+                isValid: false,
+                fieldResults: {},
+                summary: {
+                    totalFields: 0,
+                    validFields: 0,
+                    invalidFields: 0,
+                    warnings: 0,
+                    errors: ['입력된 데이터가 없습니다. 폼을 작성해주세요.']
+                }
+            };
+        }
+
+        // 템플릿별 필수 필드 체크
+        for (const fieldName of requiredFields) {
+            if (this.isEmpty(data[fieldName])) {
+                results[fieldName] = {
+                    isValid: false,
+                    errors: [`${fieldName}은(는) ${this.getTemplateDisplayName(templateType)} 생성에 필수입니다.`],
+                    warnings: []
+                };
+                hasErrors = true;
+            } else {
+                // 기본 형식 검증
+                const result = this.validateField(fieldName, data[fieldName], data);
+                results[fieldName] = result;
+                
+                if (!result.isValid) {
+                    hasErrors = true;
+                }
+            }
+        }
+
+        return {
+            isValid: !hasErrors,
+            fieldResults: results,
+            summary: this.generateTemplateValidationSummary(results, templateType, requiredFields.length)
+        };
+    }
+
+    /**
+     * 템플릿 표시명 반환
+     * @param {string} templateType - 템플릿 타입
+     * @returns {string} 표시명
+     */
+    getTemplateDisplayName(templateType) {
+        const displayNames = {
+            'termsheet': 'Term Sheet',
+            'preliminary': '예비투심위 보고서'
+        };
+        return displayNames[templateType] || templateType;
+    }
+
+    /**
+     * 템플릿별 검증 요약 생성
+     * @param {Object} results - 검증 결과
+     * @param {string} templateType - 템플릿 타입
+     * @param {number} totalRequired - 총 필수 필드 수
+     * @returns {Object} 요약 정보
+     */
+    generateTemplateValidationSummary(results, templateType, totalRequired) {
+        const summary = {
+            templateType: templateType,
+            templateName: this.getTemplateDisplayName(templateType),
+            totalRequiredFields: totalRequired,
+            validFields: 0,
+            invalidFields: 0,
+            warnings: 0,
+            errors: []
+        };
+
+        for (const [fieldName, result] of Object.entries(results)) {
+            if (result.isValid) {
+                summary.validFields++;
+            } else {
+                summary.invalidFields++;
+                summary.errors.push(...result.errors.map(error => `${fieldName}: ${error}`));
+            }
+            
+            summary.warnings += result.warnings.length;
+        }
+
+        return summary;
+    }
+
     // 유틸리티 메서드들
     isRequired(fieldName) {
         const requiredFields = [
             '투자대상', '대표자', '투자금액', '투자방식', '투자단가', 
-            '액면가', '투자전가치', '투자후가치', '담당자투자총괄'
+            '액면가', '투자전가치', '투자후가치', '투자총괄'
         ];
         return requiredFields.includes(fieldName);
     }

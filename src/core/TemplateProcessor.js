@@ -28,6 +28,37 @@ class TemplateProcessor {
             throw new Error(`템플릿 타입을 찾을 수 없습니다: ${templateType}`);
         }
 
+        // 템플릿별 필수 필드 검증
+        if (window.DataValidator && window.DataValidator.validateForTemplate) {
+            const validationResult = window.DataValidator.validateForTemplate(data, templateType);
+            
+            if (!validationResult.isValid) {
+                console.error('❌ 템플릿별 검증 실패:', validationResult);
+                
+                const errorMessage = `<div style="text-align: left; line-height: 1.6;">
+                    <strong>${validationResult.summary.templateName} 생성에 필요한 정보가 부족합니다.</strong><br><br>
+                    <strong>필수 필드 수:</strong> ${validationResult.summary.totalRequiredFields}개<br>
+                    <strong>입력 완료:</strong> ${validationResult.summary.validFields}개<br>
+                    <strong>미입력:</strong> ${validationResult.summary.invalidFields}개<br><br>
+                    <strong>누락된 필드:</strong><br>
+                    ${validationResult.summary.errors.map(error => `• ${error.split(': ')[1] || error}`).join('<br>')}
+                </div>`;
+                
+                // 모달로 자세한 오류 정보 표시
+                if (window.Modal) {
+                    await window.Modal.alert(errorMessage, `⚠️ ${validationResult.summary.templateName} 검증 실패`);
+                }
+                
+                throw new Error(`${validationResult.summary.templateName} 생성에 필요한 필수 정보가 부족합니다.`);
+            }
+            
+            console.log('✅ 템플릿별 검증 통과:', {
+                template: validationResult.summary.templateName,
+                validFields: validationResult.summary.validFields,
+                totalRequired: validationResult.summary.totalRequiredFields
+            });
+        }
+
         try {
             // 로딩 토스트 표시
             const loadingToast = window.Toast.loading('문서를 생성하는 중입니다...');
@@ -421,7 +452,7 @@ class TemplateProcessor {
             ],
             'preliminary': [
                 '투자대상', '대표자', '투자금액', '투자재원', '투자방식',
-                '사용용도', '담당자투자총괄', '투자전가치', '투자후가치'
+                '사용용도', '투자총괄', '투자전가치', '투자후가치'
             ]
         };
         
