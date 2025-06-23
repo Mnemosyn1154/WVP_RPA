@@ -417,4 +417,88 @@
         transform: scale(1);
         opacity: 1;
     }
+}
+
+/* 담당자 관리 버튼 스타일 */
+.add-manager-btn {
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius);
+    font-size: 0.875rem;
+    cursor: pointer;
+    margin-top: var(--spacing-xs);
+    transition: all 0.2s ease;
+}
+
+.add-manager-btn:hover {
+    background: var(--color-primary-dark);
+    transform: translateY(-1px);
+}
+
+.remove-manager-btn {
+    background: var(--color-danger);
+    color: white;
+    border: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    cursor: pointer;
+    margin-left: var(--spacing-xs);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.remove-manager-btn:hover {
+    background: var(--color-danger-dark);
+    transform: scale(1.1);
+}
+
+.conditional-field {
+    animation: slideIn 0.3s ease-out;
+    width: 100%; /* 전체 폭 사용 */
+}
+
+.conditional-field[style*="display: none"] {
+    animation: slideOut 0.3s ease-out;
+}
+
+/* 조건부 필드의 입력창도 동일한 폭 적용 */
+.conditional-field .form-field-input {
+    width: 100% !important;
+    box-sizing: border-box;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+        max-height: 0;
+        overflow: hidden;
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 500px; /* 충분한 높이로 증가 */
+        overflow: visible;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 500px;
+        overflow: hidden;
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-10px);
+        max-height: 0;
+        overflow: hidden;
+    }
 } 

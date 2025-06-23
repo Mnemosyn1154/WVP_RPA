@@ -267,7 +267,8 @@ class FormGenerator {
                 help: fieldData.helpText || '', // description -> helpText
                 value: fieldData.default || '',
                 validate: this.getValidator(fieldKey, fieldData),
-                onChange: (value, fieldId) => this.handleFieldChange(fieldKey, value, fieldId)
+                onChange: (value, fieldId) => this.handleFieldChange(fieldKey, value, fieldId),
+                conditional: fieldData.conditional || false // 조건부 필드 설정 추가
             };
 
             // 숫자 필드 추가 설정

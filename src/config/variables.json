@@ -260,14 +260,33 @@
           "templateMapping": ["[위약벌]"],
           "helpText": "계약 위반 시 적용할 위약벌 비율을 입력하세요"
         },
-        "담당자투자총괄": {
+        "투자총괄": {
           "type": "text",
           "required": true,
           "maxLength": 30,
           "validation": "^[가-힣a-zA-Z\\s]+$",
           "placeholder": "예: 이영희 이사",
-          "templateMapping": ["[담당자]", "[투자총괄]"],
-          "helpText": "투자 담당자 또는 투자총괄의 이름을 입력하세요"
+          "templateMapping": ["[투자총괄]"],
+          "helpText": "투자 총괄 책임자의 이름을 입력하세요"
+        },
+        "담당자1": {
+          "type": "text",
+          "required": true,
+          "maxLength": 30,
+          "validation": "^[가-힣a-zA-Z\\s]+$",
+          "placeholder": "예: 김철수 차장",
+          "templateMapping": ["[담당자1]"],
+          "helpText": "주 담당자의 이름을 입력하세요"
+        },
+        "담당자2": {
+          "type": "text",
+          "required": false,
+          "maxLength": 30,
+          "validation": "^[가-힣a-zA-Z\\s]*$",
+          "placeholder": "예: 박영희 대리 (선택사항)",
+          "templateMapping": ["[담당자2]"],
+          "helpText": "추가 담당자가 있는 경우 이름을 입력하세요",
+          "conditional": true
         }
       }
     }

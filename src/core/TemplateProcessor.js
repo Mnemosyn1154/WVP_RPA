@@ -206,6 +206,9 @@ class TemplateProcessor {
             templateData[key] = value.toString();
         }
         
+        // 담당자 정보 조합 처리
+        this.processMemberFields(templateData);
+        
         // 별칭 변수들 추가 (템플릿에서 사용되는 다양한 이름들)
         const aliases = {
             '회사명': templateData['투자대상'],
@@ -214,9 +217,7 @@ class TemplateProcessor {
             'Pre-money': templateData['투자전가치'],
             'Post-money': templateData['투자후가치'],
             '투자라운드': templateData['Series'],
-            '투자목적': templateData['사용용도'],
-            '투자총괄': templateData['담당자투자총괄'],
-            '담당자': templateData['담당자투자총괄']
+            '투자목적': templateData['사용용도']
         };
         
         // 별칭들을 templateData에 추가
@@ -279,6 +280,37 @@ class TemplateProcessor {
         const numStr = value.toString().replace(/[,원주%\s]/g, '');
         const num = parseFloat(numStr);
         return isNaN(num) ? 0 : num;
+    }
+
+    /**
+     * 담당자 정보 조합 처리
+     * @param {Object} templateData - 템플릿 데이터 객체
+     */
+    processMemberFields(templateData) {
+        const manager1 = templateData['담당자1'] || '';
+        const manager2 = templateData['담당자2'] || '';
+        
+        // [담당자] 변수: 담당자1과 담당자2를 조합
+        if (manager1 && manager2) {
+            // 두 명 모두 있는 경우: "담당자1, 담당자2"
+            templateData['담당자'] = `${manager1}, ${manager2}`;
+        } else if (manager1) {
+            // 담당자1만 있는 경우: "담당자1"
+            templateData['담당자'] = manager1;
+        } else {
+            // 아무도 없는 경우: "-"
+            templateData['담당자'] = '-';
+        }
+        
+        // 개별 담당자 필드도 빈 값 처리
+        templateData['담당자1'] = manager1 || '-';
+        templateData['담당자2'] = manager2 || '-';
+        
+        console.log('💼 담당자 정보 처리 완료:', {
+            '담당자': templateData['담당자'],
+            '담당자1': templateData['담당자1'],
+            '담당자2': templateData['담당자2']
+        });
     }
 
     /**
@@ -455,7 +487,10 @@ class TemplateProcessor {
             '인수주식수': 'shares_acquired',
             '투자재원': 'investment_source',
             '사용용도': 'use_of_funds',
-            '담당자투자총괄': 'investment_manager',
+            '투자총괄': 'investment_manager',
+            '담당자': 'managers',
+            '담당자1': 'manager1',
+            '담당자2': 'manager2',
             '상환이자': 'redemption_interest',
             '잔여분배이자': 'residual_distribution_interest',
             '주매청이자': 'tag_along_interest',
