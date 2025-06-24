@@ -44,23 +44,31 @@
 
     <!-- Main Content -->
     <main class="main">
-        <!-- Progress Bar -->
-        <div class="progress-container">
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill"></div>
-            </div>
-            <div class="progress-text">
-                <span id="progressText">0% 완료</span>
-                <span id="statusText">입력을 시작하세요</span>
-            </div>
-        </div>
-
         <!-- Form Container -->
         <div class="form-container" id="formContainer">
             <!-- 동적으로 생성될 폼 섹션들 -->
             <div class="loading" id="loadingSpinner">
-                <div class="spinner"></div>
-                <p>폼을 생성하는 중...</p>
+                <div class="spinner">
+                    <div class="spinner-icons">
+                        <div class="spinner-content">
+                            <div class="spinner-icon">💼</div>
+                            <div class="spinner-icon">📄</div>
+                            <div class="spinner-icon">📊</div>
+                            <div class="spinner-icon">💰</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="loading-steps">
+                    <div class="loading-step"></div>
+                    <div class="loading-step"></div>
+                    <div class="loading-step"></div>
+                    <div class="loading-step"></div>
+                    <div class="loading-step"></div>
+                </div>
+                
+                <p id="loadingText">투자문서 시스템을 준비하는 중...</p>
+                <div class="loading-subtitle" id="loadingSubtitle">잠시만 기다려주세요</div>
             </div>
         </div>
 

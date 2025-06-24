@@ -434,4 +434,240 @@ window.InvestmentHelpers = {
   
   // 이벤트 처리
   dispatchCustomEvent
+};
+
+/**
+ * ===== ENHANCED LOADING ANIMATION HELPERS =====
+ */
+
+/**
+ * 단계별 로딩 매니저
+ */
+class LoadingManager {
+    constructor() {
+        this.currentStep = 0;
+        this.totalSteps = 5;
+        this.isActive = false;
+        this.stepInterval = null;
+        this.textRotationInterval = null;
+        
+        // 로딩 메시지들
+        this.messages = [
+            { main: '투자문서 시스템을 준비하는 중...', sub: '컴포넌트를 초기화하고 있습니다' },
+            { main: '필드 구조를 생성하는 중...', sub: '투자 조건 입력 항목을 준비하고 있습니다' },
+            { main: '검증 시스템을 로드하는 중...', sub: '데이터 유효성 검사 규칙을 설정하고 있습니다' },
+            { main: '템플릿을 준비하는 중...', sub: 'Term Sheet와 예비투심위 양식을 로드하고 있습니다' },
+            { main: '시스템을 완료하는 중...', sub: '모든 준비가 완료되었습니다' }
+        ];
+    }
+
+    /**
+     * 로딩 시작
+     * @param {number} duration - 총 로딩 시간 (ms)
+     */
+    start(duration = 3000) {
+        this.isActive = true;
+        this.currentStep = 0;
+        
+        const stepDuration = duration / this.totalSteps;
+        
+        // 첫 번째 단계 활성화
+        this.activateStep(0);
+        
+        // 단계별 진행
+        this.stepInterval = setInterval(() => {
+            if (this.currentStep < this.totalSteps - 1) {
+                this.currentStep++;
+                this.activateStep(this.currentStep);
+            } else {
+                this.complete();
+            }
+        }, stepDuration);
+        
+        // 텍스트 로테이션 시작
+        this.startTextRotation();
+    }
+
+    /**
+     * 특정 단계 활성화
+     * @param {number} stepIndex - 단계 인덱스
+     */
+    activateStep(stepIndex) {
+        const steps = document.querySelectorAll('.loading-step');
+        const textElement = document.getElementById('loadingText');
+        const subtitleElement = document.getElementById('loadingSubtitle');
+        
+        if (steps[stepIndex]) {
+            steps[stepIndex].classList.add('active');
+        }
+        
+        if (textElement && this.messages[stepIndex]) {
+            textElement.textContent = this.messages[stepIndex].main;
+        }
+        
+        if (subtitleElement && this.messages[stepIndex]) {
+            subtitleElement.textContent = this.messages[stepIndex].sub;
+        }
+    }
+
+    /**
+     * 텍스트 로테이션 시작
+     */
+    startTextRotation() {
+        let messageIndex = 0;
+        const textElement = document.getElementById('loadingText');
+        const subtitleElement = document.getElementById('loadingSubtitle');
+        
+        this.textRotationInterval = setInterval(() => {
+            if (!this.isActive) return;
+            
+            messageIndex = (messageIndex + 1) % this.messages.length;
+            
+            if (textElement) {
+                textElement.style.opacity = '0.5';
+                setTimeout(() => {
+                    textElement.textContent = this.messages[messageIndex].main;
+                    textElement.style.opacity = '1';
+                }, 150);
+            }
+            
+            if (subtitleElement) {
+                subtitleElement.style.opacity = '0.5';
+                setTimeout(() => {
+                    subtitleElement.textContent = this.messages[messageIndex].sub;
+                    subtitleElement.style.opacity = '1';
+                }, 200);
+            }
+        }, 1500);
+    }
+
+    /**
+     * 로딩 완료
+     */
+    complete() {
+        this.isActive = false;
+        
+        if (this.stepInterval) {
+            clearInterval(this.stepInterval);
+            this.stepInterval = null;
+        }
+        
+        if (this.textRotationInterval) {
+            clearInterval(this.textRotationInterval);
+            this.textRotationInterval = null;
+        }
+        
+        // 모든 단계 활성화
+        const steps = document.querySelectorAll('.loading-step');
+        steps.forEach(step => step.classList.add('active'));
+        
+        // 완료 메시지
+        const textElement = document.getElementById('loadingText');
+        const subtitleElement = document.getElementById('loadingSubtitle');
+        
+        if (textElement) {
+            textElement.textContent = '준비 완료!';
+        }
+        
+        if (subtitleElement) {
+            subtitleElement.textContent = '투자문서 생성을 시작하세요';
+        }
+    }
+
+    /**
+     * 로딩 중단
+     */
+    stop() {
+        this.isActive = false;
+        
+        if (this.stepInterval) {
+            clearInterval(this.stepInterval);
+            this.stepInterval = null;
+        }
+        
+        if (this.textRotationInterval) {
+            clearInterval(this.textRotationInterval);
+            this.textRotationInterval = null;
+        }
+    }
+
+    /**
+     * 커스텀 메시지로 로딩 시작
+     * @param {Array} customMessages - 커스텀 메시지 배열
+     * @param {number} duration - 총 로딩 시간
+     */
+    startWithCustomMessages(customMessages, duration = 3000) {
+        if (customMessages && customMessages.length > 0) {
+            this.messages = customMessages;
+            this.totalSteps = customMessages.length;
+        }
+        this.start(duration);
+    }
+}
+
+/**
+ * 전역 로딩 매니저 인스턴스
+ */
+window.LoadingManager = new LoadingManager();
+
+/**
+ * 문서 생성용 로딩 메시지
+ */
+const DOCUMENT_LOADING_MESSAGES = [
+    { main: '데이터를 수집하는 중...', sub: '입력된 투자 조건을 분석하고 있습니다' },
+    { main: '데이터를 검증하는 중...', sub: '필수 항목과 형식을 확인하고 있습니다' },
+    { main: '템플릿을 처리하는 중...', sub: '문서 양식에 데이터를 적용하고 있습니다' },
+    { main: '문서를 생성하는 중...', sub: 'Term Sheet 또는 예비투심위 보고서를 만들고 있습니다' },
+    { main: '파일을 준비하는 중...', sub: '다운로드할 문서를 최종 점검하고 있습니다' }
+];
+
+/**
+ * 파일 처리용 로딩 메시지
+ */
+const FILE_LOADING_MESSAGES = [
+    { main: '파일을 읽는 중...', sub: 'Excel 파일 구조를 분석하고 있습니다' },
+    { main: '데이터를 파싱하는 중...', sub: '셀 데이터를 JavaScript 객체로 변환하고 있습니다' },
+    { main: '필드를 매핑하는 중...', sub: '21개 투자 조건 항목을 연결하고 있습니다' },
+    { main: '데이터를 검증하는 중...', sub: '가져온 데이터의 유효성을 확인하고 있습니다' },
+    { main: '폼에 적용하는 중...', sub: '입력 필드에 데이터를 채우고 있습니다' }
+];
+
+/**
+ * 로딩 유틸리티 함수들
+ */
+window.LoadingUtils = {
+    /**
+     * 메인 로딩 시작
+     */
+    startMainLoading(duration = 2000) {
+        window.LoadingManager.start(duration);
+    },
+
+    /**
+     * 문서 생성 로딩 시작
+     */
+    startDocumentLoading(duration = 4000) {
+        window.LoadingManager.startWithCustomMessages(DOCUMENT_LOADING_MESSAGES, duration);
+    },
+
+    /**
+     * 파일 처리 로딩 시작
+     */
+    startFileLoading(duration = 3000) {
+        window.LoadingManager.startWithCustomMessages(FILE_LOADING_MESSAGES, duration);
+    },
+
+    /**
+     * 로딩 완료
+     */
+    completeLoading() {
+        window.LoadingManager.complete();
+    },
+
+    /**
+     * 로딩 중단
+     */
+    stopLoading() {
+        window.LoadingManager.stop();
+    }
 }; 

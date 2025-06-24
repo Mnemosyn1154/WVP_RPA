@@ -20,13 +20,6 @@ class InvestmentDocumentApp {
     this.formData = {};
     this.isInitialized = false;
     
-    // 진행률 추적
-    this.progress = {
-      current: 0,
-      total: 21, // 총 21개 변수
-      percentage: 0
-    };
-    
     this.init();
   }
 
@@ -55,32 +48,67 @@ class InvestmentDocumentApp {
    */
   async initializeApp() {
     try {
+      // 🎬 새로운 로딩 애니메이션 시작
+      if (window.LoadingUtils) {
+        window.LoadingUtils.startMainLoading(3000);
+      }
+      
       // 1. 브라우저 지원 확인
       this.checkBrowserSupport();
+      await InvestmentHelpers.delay(400); // 로딩 애니메이션을 위한 대기
       
       // 2. 설정 파일 로드
       await this.loadConfiguration();
+      await InvestmentHelpers.delay(400);
       
       // 3. 핵심 모듈 초기화
       await this.initializeModules();
+      await InvestmentHelpers.delay(600);
       
       // 4. UI 초기화
       this.initializeUI();
+      await InvestmentHelpers.delay(400);
       
       // 5. 이벤트 리스너 등록
       this.attachEventListeners();
+      await InvestmentHelpers.delay(300);
       
       // 6. 저장된 데이터 복원
       this.restoreFormData();
+      
+      // 🎉 로딩 완료
+      if (window.LoadingUtils) {
+        window.LoadingUtils.completeLoading();
+      }
+      
+      // 잠깐 대기 후 로딩 화면 숨기기
+      setTimeout(() => {
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        if (loadingSpinner) {
+          loadingSpinner.style.opacity = '0';
+          loadingSpinner.style.transition = 'opacity 0.5s ease';
+          setTimeout(() => {
+            loadingSpinner.style.display = 'none';
+          }, 500);
+        }
+      }, 800);
       
       this.isInitialized = true;
       console.log('✅ 투자문서 생성기 초기화 완료!');
       
       // 성공 메시지 표시
-      this.showToast('애플리케이션이 성공적으로 초기화되었습니다!', 'success');
+      setTimeout(() => {
+        this.showToast('💼 투자문서 생성기가 준비되었습니다!', 'success');
+      }, 1200);
       
     } catch (error) {
       console.error('❌ 애플리케이션 초기화 실패:', error);
+      
+      // 로딩 중단
+      if (window.LoadingUtils) {
+        window.LoadingUtils.stopLoading();
+      }
+      
       this.showError(`초기화 실패: ${error.message}`);
     }
   }
@@ -168,12 +196,6 @@ class InvestmentDocumentApp {
    */
   initializeUI() {
     try {
-      // 로딩 스피너 숨기기
-      const loadingSpinner = document.getElementById('loadingSpinner');
-      if (loadingSpinner) {
-        loadingSpinner.style.display = 'none';
-      }
-      
       // 화폐 선택기 초기화
       this.initializeCurrencySelector();
       
@@ -185,9 +207,6 @@ class InvestmentDocumentApp {
       if (actionBar) {
         actionBar.style.display = 'flex';
       }
-      
-      // 진행률 초기화
-      this.updateProgress();
       
       console.log('🎨 UI 초기화 완료');
       
@@ -286,7 +305,6 @@ class InvestmentDocumentApp {
   handleFormDataChange(data) {
     try {
       this.formData = { ...this.formData, ...data };
-      this.updateProgress();
       this.saveFormData();
       
     } catch (error) {
@@ -301,52 +319,13 @@ class InvestmentDocumentApp {
   handleCalculationComplete(result) {
     try {
       this.formData = { ...this.formData, ...result };
-      this.updateProgress();
       
     } catch (error) {
       console.error('계산 완료 처리 실패:', error);
     }
   }
 
-  /**
-   * 진행률 업데이트
-   */
-  updateProgress() {
-    try {
-      const filledFields = Object.keys(this.formData).filter(
-        key => !InvestmentHelpers.isEmpty(this.formData[key])
-      ).length;
-      
-      this.progress.current = filledFields;
-      this.progress.percentage = Math.round((filledFields / this.progress.total) * 100);
-      
-      // UI 업데이트
-      const progressFill = document.getElementById('progressFill');
-      const progressText = document.getElementById('progressText');
-      const statusText = document.getElementById('statusText');
-      
-      if (progressFill) {
-        progressFill.style.width = `${this.progress.percentage}%`;
-      }
-      
-      if (progressText) {
-        progressText.textContent = `${this.progress.percentage}% 완료`;
-      }
-      
-      if (statusText) {
-        if (this.progress.percentage === 100) {
-          statusText.textContent = '입력 완료! 문서를 생성할 수 있습니다.';
-        } else if (this.progress.percentage >= 50) {
-          statusText.textContent = '절반 이상 입력되었습니다.';
-        } else {
-          statusText.textContent = `${this.progress.total - this.progress.current}개 항목이 더 필요합니다.`;
-        }
-      }
-      
-    } catch (error) {
-      console.error('진행률 업데이트 실패:', error);
-    }
-  }
+
 
   /**
    * 폼 데이터를 Excel 파일로 저장
@@ -405,7 +384,6 @@ class InvestmentDocumentApp {
       if (confirmed) {
         this.formData = {};
         this.formGenerator.clearForm();
-        this.updateProgress();
         this.showToast('데이터가 초기화되었습니다.', 'info');
       }
       
@@ -544,7 +522,6 @@ class InvestmentDocumentApp {
       const savedData = this.storage.load('formData');
       if (savedData) {
         this.formData = savedData;
-        this.updateProgress();
         console.log('💾 저장된 데이터 복원 완료');
       }
       
@@ -656,7 +633,6 @@ if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
   window.debugApp = {
     getFormData: () => window.investmentApp.formData,
     setFormData: (data) => { window.investmentApp.formData = data; },
-    getProgress: () => window.investmentApp.progress,
     testValidation: () => {
       console.log('🧪 유효성 검증 테스트');
       const result = window.investmentApp.dataValidator.validateForm(window.investmentApp.formData);
@@ -670,7 +646,6 @@ if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
     },
     clearData: () => {
       window.investmentApp.formData = {};
-      window.investmentApp.updateProgress();
       console.log('🗑️ 폼 데이터 초기화 완료');
     }
   };

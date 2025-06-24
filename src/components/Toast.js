@@ -247,7 +247,7 @@ class Toast {
             error: '❌',
             warning: '⚠️',
             info: 'ℹ️',
-            loading: '⏳'
+            loading: '<div class="toast-spinner"></div>'
         };
         return icons[type] || icons.info;
     }
