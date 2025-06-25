@@ -362,28 +362,28 @@ class InvestmentDocumentApp {
               <span>Excel로 저장</span>
             </div>
             <div class="shortcut-item">
-              <kbd>Ctrl + O</kbd>
+              <kbd>Ctrl + Shift + O</kbd>
               <span>Excel에서 열기</span>
             </div>
             <div class="shortcut-item">
-              <kbd>Ctrl + G</kbd>
+              <kbd>Ctrl + Enter</kbd>
               <span>모든 문서 생성</span>
             </div>
             <div class="shortcut-item">
-              <kbd>Ctrl + T</kbd>
+              <kbd>Ctrl + 1</kbd>
               <span>Term Sheet 생성</span>
             </div>
             <div class="shortcut-item">
-              <kbd>Ctrl + P</kbd>
+              <kbd>Ctrl + 2</kbd>
               <span>예비투심위 생성</span>
             </div>
             <div class="shortcut-item">
-              <kbd>Ctrl + R</kbd>
+              <kbd>Ctrl + Delete</kbd>
               <span>데이터 초기화</span>
             </div>
             <div class="shortcut-item">
               <kbd>Enter</kbd>
-              <span>모든 문서 생성</span>
+              <span>모든 문서 생성 (입력 필드 외)</span>
             </div>
             <div class="shortcut-item">
               <kbd>Escape</kbd>
@@ -395,10 +395,10 @@ class InvestmentDocumentApp {
         <div class="help-section">
           <h4>💡 사용 팁</h4>
           <ul>
-            <li>필드 옆의 <strong>?</strong> 아이콘을 클릭하면 상세 설명을 볼 수 있습니다</li>
             <li>화폐 단위는 우측 상단에서 변경할 수 있습니다</li>
             <li>데이터는 자동으로 저장되며, Excel 파일로 백업할 수 있습니다</li>
             <li>필수 필드가 부족하면 문서 생성 시 안내됩니다</li>
+            <li>각 필드의 설명은 라벨을 참고하여 입력하세요</li>
           </ul>
         </div>
 
