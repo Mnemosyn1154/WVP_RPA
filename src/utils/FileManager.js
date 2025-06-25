@@ -149,9 +149,6 @@ class FileManager {
                 // 폼 필드들에 값 채우기
                 window.investmentApp.formGenerator.populateForm(formData);
                 
-                // 진행률 업데이트
-                window.investmentApp.updateProgress();
-                
                 console.log('📋 폼 데이터 적용 완료');
             } else {
                 throw new Error('폼 생성기를 찾을 수 없습니다.');

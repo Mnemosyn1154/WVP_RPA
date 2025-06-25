@@ -258,6 +258,9 @@ class InvestmentDocumentApp {
       // 버튼 클릭 이벤트
       this.attachButtonListeners();
       
+      // 키보드 단축키 이벤트
+      this.attachKeyboardListeners();
+      
       // 윈도우 이벤트 - 페이지 종료 시 LocalStorage에만 백업 저장
       window.addEventListener('beforeunload', () => {
         this.createEmergencyBackup();
@@ -305,6 +308,81 @@ class InvestmentDocumentApp {
         this.handleNavAction(action);
       });
     });
+  }
+
+  /**
+   * 키보드 단축키 이벤트 리스너 등록
+   */
+  attachKeyboardListeners() {
+    document.addEventListener('keydown', (event) => {
+      try {
+        // 입력 필드에서는 Enter만 처리
+        const isInputField = event.target.tagName === 'INPUT' || 
+                           event.target.tagName === 'TEXTAREA' || 
+                           event.target.tagName === 'SELECT';
+
+        // Escape 키: 모달 닫기 (모든 곳에서 작동)
+        if (event.key === 'Escape') {
+          if (window.Modal && window.Modal.closeTopModal) {
+            window.Modal.closeTopModal();
+            event.preventDefault();
+          }
+          return;
+        }
+
+        // 입력 필드에서는 Ctrl 조합키만 처리
+        if (isInputField && !event.ctrlKey) {
+          return;
+        }
+
+        // Ctrl 키 조합 단축키
+        if (event.ctrlKey) {
+          switch (event.key) {
+            case 's': // Ctrl+S: Excel로 저장
+              event.preventDefault();
+              this.saveFormData();
+              break;
+              
+            case 'Enter': // Ctrl+Enter: 모든 문서 생성
+              event.preventDefault();
+              this.generateAllDocuments();
+              break;
+              
+            case '1': // Ctrl+1: Term Sheet 생성
+              event.preventDefault();
+              this.generateDocument('termsheet');
+              break;
+              
+            case '2': // Ctrl+2: 예비투심위 생성
+              event.preventDefault();
+              this.generateDocument('preliminary');
+              break;
+              
+            case 'Delete': // Ctrl+Delete: 데이터 초기화
+              event.preventDefault();
+              this.clearFormData();
+              break;
+          }
+
+          // Ctrl+Shift 조합
+          if (event.shiftKey && event.key === 'O') { // Ctrl+Shift+O: Excel에서 열기
+            event.preventDefault();
+            this.loadFormData();
+          }
+        }
+
+        // Enter 키: 입력 필드가 아닌 곳에서 모든 문서 생성
+        if (event.key === 'Enter' && !isInputField && !event.ctrlKey) {
+          event.preventDefault();
+          this.generateAllDocuments();
+        }
+
+      } catch (error) {
+        console.error('키보드 단축키 처리 실패:', error);
+      }
+    });
+
+    console.log('⌨️ 키보드 단축키 등록 완료');
   }
 
   /**

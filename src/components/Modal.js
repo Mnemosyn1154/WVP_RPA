@@ -55,6 +55,17 @@ class Modal {
         }, 300);
     }
 
+    closeTopModal() {
+        // 가장 최근에 열린 모달 닫기
+        const modalIds = Array.from(this.activeModals.keys());
+        if (modalIds.length > 0) {
+            const topModalId = modalIds[modalIds.length - 1];
+            this.hide(topModalId);
+            return true;
+        }
+        return false;
+    }
+
     createModalElement(id, config) {
         const overlay = document.createElement('div');
         overlay.className = 'modal-overlay';
