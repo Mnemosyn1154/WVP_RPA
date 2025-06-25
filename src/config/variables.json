@@ -14,7 +14,7 @@
           "validation": "^[가-힣a-zA-Z0-9\\s\\(\\)\\-_]+$",
           "placeholder": "예: 테크스타트업(주)",
           "templateMapping": ["[투자대상]", "[회사명]"],
-          "helpText": "투자하려는 회사의 정확한 법인명을 입력하세요"
+          "helpText": "투자하려는 회사의 정확한 법인명을 입력하세요(주식회사 포함)"
         },
         "대표자": {
           "type": "text",
@@ -52,7 +52,7 @@
           "type": "textarea",
           "required": true,
           "maxLength": 500,
-          "placeholder": "예: 서비스 개발, 마케팅, 인력 충원 등",
+          "placeholder": "예: 운영자금 및 시설투자 자금 등",
           "templateMapping": ["[사용용도]", "[투자목적]"],
           "helpText": "투자금이 어떤 용도로 사용될지 구체적으로 기술하세요"
         }

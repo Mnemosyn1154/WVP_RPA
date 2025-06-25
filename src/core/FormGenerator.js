@@ -265,6 +265,7 @@ class FormGenerator {
                 required: fieldData.required || false,
                 placeholder: fieldData.placeholder || '',
                 help: fieldData.helpText || '', // description -> helpText
+                helpText: fieldData.helpText || '', // 툴팁용 helpText 추가
                 value: fieldData.default || '',
                 validate: this.getValidator(fieldKey, fieldData),
                 onChange: (value, fieldId) => this.handleFieldChange(fieldKey, value, fieldId),

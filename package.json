@@ -51,7 +51,7 @@
   "devDependencies": {
     "http-server": "^14.1.1",
     "live-server": "^1.2.2",
-    "puppeteer": "^24.10.1"
+    "puppeteer": "^24.10.2"
   },
   "files": [
     "index.html",

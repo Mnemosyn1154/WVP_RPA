@@ -39,6 +39,9 @@ class FormField {
         const required = config.required ? '<span class="form-field-required">*</span>' : '';
         const unitDisplay = this.getUnitDisplay(config);
         
+        // 툴팁 생성
+        const tooltipContainer = this.createTooltip(config);
+        
         field.innerHTML = `
             <label class="form-field-label" for="${id}">
                 ${config.label}${required}
@@ -48,6 +51,12 @@ class FormField {
             ${config.help ? `<div class="form-field-help">${config.help}</div>` : ''}
             <div class="form-field-error"></div>
         `;
+
+        // 툴팁을 라벨 뒤에 추가
+        const label = field.querySelector('.form-field-label');
+        if (tooltipContainer) {
+            label.appendChild(tooltipContainer);
+        }
 
         // 담당자1 필드인 경우 추가 담당자 버튼 추가
         if (config.name === '담당자1') {
@@ -607,6 +616,37 @@ class FormField {
         if (label) {
             label.appendChild(removeButton);
         }
+    }
+
+    /**
+     * 툴팁 생성
+     * @param {Object} config - 필드 설정
+     * @returns {HTMLElement|null} 툴팁 컨테이너
+     */
+    createTooltip(config) {
+        // helpText가 없으면 help를 fallback으로 사용
+        const helpText = config.helpText || config.help;
+        if (!helpText || !window.Tooltip) {
+            return null;
+        }
+
+        // 툴팁 설정 준비
+        const tooltipConfig = {
+            label: config.label,
+            helpText: helpText,
+            type: config.type,
+            unit: config.unit,
+            min: config.min,
+            max: config.max,
+            maxLength: config.maxLength,
+            placeholder: config.placeholder,
+            required: config.required,
+            calculated: config.calculated,
+            formula: config.formula,
+            dependencies: config.dependencies
+        };
+
+        return window.Tooltip.create(tooltipConfig);
     }
 
     /**
