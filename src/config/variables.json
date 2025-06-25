@@ -203,7 +203,11 @@
           "unit": "%",
           "placeholder": "예: 8.0",
           "templateMapping": ["[상환이자]"],
-          "helpText": "우선주 상환 시 적용할 이자율을 입력하세요"
+          "helpText": "우선주/사채 상환 시 적용할 이자율을 입력하세요",
+          "conditional": true,
+          "conditionField": "투자방식",
+          "conditionOperator": "in_list",
+          "conditionValue": ["전환상환우선주", "전환사채"]
         },
         "잔여분배이자": {
           "type": "number",
@@ -215,7 +219,11 @@
           "unit": "%",
           "placeholder": "예: 8.0",
           "templateMapping": ["[잔여분배이자]"],
-          "helpText": "잔여재산 분배 시 우선 배당 이자율을 입력하세요"
+          "helpText": "잔여재산 분배 시 우선 배당 이자율을 입력하세요",
+          "conditional": true,
+          "conditionField": "투자방식",
+          "conditionOperator": "in_list",
+          "conditionValue": ["전환상환우선주", "전환우선주"]
         },
         "주매청이자": {
           "type": "number",
@@ -246,7 +254,11 @@
           "unit": "%",
           "placeholder": "예: 0.0",
           "templateMapping": ["[배당률]"],
-          "helpText": "우선주 배당률을 입력하세요"
+          "helpText": "우선주/보통주 배당률을 입력하세요",
+          "conditional": true,
+          "conditionField": "투자방식",
+          "conditionOperator": "not_equals",
+          "conditionValue": "전환사채"
         },
         "위약벌": {
           "type": "number",
@@ -285,8 +297,7 @@
           "validation": "^[가-힣a-zA-Z\\s]*$",
           "placeholder": "예: 박영희 대리 (선택사항)",
           "templateMapping": ["[담당자2]"],
-          "helpText": "추가 담당자가 있는 경우 이름을 입력하세요",
-          "conditional": true
+          "helpText": "추가 담당자가 있는 경우 이름을 입력하세요"
         }
       }
     }

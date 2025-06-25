@@ -439,6 +439,126 @@
     flex-wrap: wrap;
 }
 
+/* Auto Save Status */
+.auto-save-status {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    min-width: 140px;
+    justify-content: center;
+}
+
+.auto-save-status.waiting {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.3);
+    color: var(--color-primary);
+}
+
+.auto-save-status.saving {
+    background: rgba(251, 146, 60, 0.1);
+    border-color: rgba(251, 146, 60, 0.3);
+    color: var(--color-warning);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.auto-save-status.saved {
+    background: rgba(34, 197, 94, 0.1);
+    border-color: rgba(34, 197, 94, 0.3);
+    color: var(--color-success);
+}
+
+.auto-save-status.error {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: var(--color-error);
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* Workflow Optimization Styles */
+.field-highlighted {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+    transition: all 0.3s ease;
+}
+
+.input-hint {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    margin-top: var(--spacing-xs);
+    padding: var(--spacing-xs);
+    background: rgba(59, 130, 246, 0.05);
+    border-radius: var(--border-radius-sm);
+    border-left: 3px solid var(--color-primary);
+}
+
+.field-tooltip {
+    background: var(--color-text);
+    color: var(--color-surface);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    font-size: var(--font-size-xs);
+    max-width: 300px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    animation: fadeInUp 0.2s ease;
+}
+
+.autocomplete-dropdown {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-sm);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.autocomplete-option {
+    padding: var(--spacing-sm);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.autocomplete-option:hover {
+    background: var(--color-hover);
+}
+
+.section-progress {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    margin-left: auto;
+}
+
+.progress-text {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: rgba(34, 197, 94, 0.1);
+    border-radius: var(--border-radius-sm);
+    font-weight: var(--font-weight-medium);
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* Toast Notifications */
 .toast-container {
     position: fixed;
@@ -808,4 +928,99 @@
 
 .modal-small {
     max-width: 400px;
+}
+
+/* Validation Status Styles */
+.validation-status {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    min-width: 140px;
+    justify-content: center;
+}
+
+.validation-status.waiting {
+    background: rgba(156, 163, 175, 0.1);
+    border-color: rgba(156, 163, 175, 0.3);
+    color: var(--color-text-secondary);
+}
+
+.validation-status.validating {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.3);
+    color: var(--color-primary);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.validation-status.valid {
+    background: rgba(34, 197, 94, 0.1);
+    border-color: rgba(34, 197, 94, 0.3);
+    color: var(--color-success);
+}
+
+.validation-status.invalid {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: var(--color-error);
+}
+
+.validation-status.warning {
+    background: rgba(251, 146, 60, 0.1);
+    border-color: rgba(251, 146, 60, 0.3);
+    color: var(--color-warning);
+}
+
+/* Validation Field Styles */
+.form-field.validation-error .form-field-input {
+    border-color: var(--color-error) !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+}
+
+.form-field.validation-warning .form-field-input {
+    border-color: var(--color-warning) !important;
+    box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.1) !important;
+}
+
+.form-field.validation-success .form-field-input {
+    border-color: var(--color-success) !important;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1) !important;
+}
+
+.form-field-input.validation-error {
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.form-field-input.validation-warning {
+    background: rgba(251, 146, 60, 0.05);
+}
+
+.form-field-input.validation-success {
+    background: rgba(34, 197, 94, 0.05);
+}
+
+/* Enhanced Error Display */
+.form-field-error {
+    font-size: var(--font-size-xs);
+    margin-top: var(--spacing-xs);
+    padding: var(--spacing-xs);
+    border-radius: var(--border-radius-sm);
+    transition: all 0.3s ease;
+}
+
+.form-field.validation-error .form-field-error {
+    background: rgba(239, 68, 68, 0.1);
+    border-left: 3px solid var(--color-error);
+    color: var(--color-error);
+}
+
+.form-field.validation-warning .form-field-error {
+    background: rgba(251, 146, 60, 0.1);
+    border-left: 3px solid var(--color-warning);
+    color: var(--color-warning);
 } 

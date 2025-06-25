@@ -12,6 +12,20 @@ class FormGenerator {
         this.sections = new Map();
         this.fields = new Map();
         this.isInitialized = false;
+        this.autoSaveTimer = null; // 자동 저장 타이머
+        this.lastSaveData = null; // 마지막 저장된 데이터
+        
+        // 상태 관리 시스템 추가
+        this.formState = {
+            isDirty: false,          // 변경사항 있음
+            isValid: false,          // 전체 유효성
+            lastModified: null,      // 마지막 변경 시간
+            fieldStates: new Map(),  // 각 필드의 상태
+            validationErrors: new Map(), // 검증 오류
+            completionRate: 0        // 완성률
+        };
+        this.changeHistory = [];     // 변경 이력
+        this.maxHistorySize = 50;    // 맥스 이력 사이즈
         
         // 자동 초기화 제거 - 명시적으로 init() 호출 필요
         console.log('🔧 FormGenerator 인스턴스 생성됨 (초기화 대기 중...)');
@@ -160,6 +174,12 @@ class FormGenerator {
                 // 이벤트 리스너 실패는 치명적이지 않으므로 계속 진행
             }
             
+            // 초기 조건부 필드 상태 설정
+            this.initializeConditionalFields();
+            
+            // 워크플로우 최적화 기능 초기화
+            this.initializeWorkflowOptimization();
+            
             console.log('🎉 generateForm 완료');
             
         } catch (error) {
@@ -269,7 +289,10 @@ class FormGenerator {
                 value: fieldData.default || '',
                 validate: this.getValidator(fieldKey, fieldData),
                 onChange: (value, fieldId) => this.handleFieldChange(fieldKey, value, fieldId),
-                conditional: fieldData.conditional || false // 조건부 필드 설정 추가
+                conditional: fieldData.conditional || false, // 조건부 필드 설정 추가
+                conditionField: fieldData.conditionField || null, // 조건 참조 필드
+                conditionValue: fieldData.conditionValue || null, // 조건 값
+                conditionOperator: fieldData.conditionOperator || 'equals' // 조건 연산자 (equals, not_equals, greater_than, etc.)
             };
 
             // 숫자 필드 추가 설정
@@ -356,11 +379,31 @@ class FormGenerator {
     }
 
     handleFieldChange(fieldKey, value, fieldId) {
+        // 변경 이력 기록
+        this.recordChange(fieldKey, value);
+        
+        // 필드 상태 업데이트
+        this.updateFieldState(fieldKey, value, fieldId);
+        
+        // 투자방식 변경 시 동적 라벨 업데이트
+        if (fieldKey === '투자방식') {
+            this.updateDynamicLabels(value);
+        }
+        
+        // 조건부 필드 표시/숨기기 로직 실행
+        this.evaluateConditionalFields(fieldKey, value);
+        
         // 자동 계산 실행
         this.performAutoCalculations(fieldKey, value);
         
+        // 전체 상태 업데이트
+        this.updateFormState();
+        
         // 진행률 업데이트
         this.updateProgress();
+        
+        // 실시간 고급 검증 수행 (디바운스)
+        this.triggerAdvancedValidation();
         
         // 자동 저장 (설정된 경우)
         this.autoSave();
@@ -435,12 +478,15 @@ class FormGenerator {
 
     updateProgress() {
         const allData = this.getAllFieldValues();
-        const totalFields = Object.keys(allData).length;
-        const filledFields = Object.values(allData).filter(value => 
-            value !== null && value !== undefined && value !== ''
+        const visibleFields = this.getVisibleFields();
+        const filledFields = Object.entries(allData).filter(([key, value]) => 
+            visibleFields.includes(key) && value !== null && value !== undefined && value !== ''
         ).length;
         
-        const progress = totalFields > 0 ? (filledFields / totalFields) * 100 : 0;
+        const progress = visibleFields.length > 0 ? (filledFields / visibleFields.length) * 100 : 0;
+        
+        // 상태 업데이트
+        this.formState.completionRate = progress;
         
         // 진행률 바 업데이트
         const progressFill = document.getElementById('progressFill');
@@ -452,16 +498,26 @@ class FormGenerator {
         }
         
         if (progressText) {
-            progressText.textContent = `${Math.round(progress)}% 완료`;
+            progressText.textContent = `${Math.round(progress)}% 완료 (${filledFields}/${visibleFields.length})`;
         }
         
         if (statusText) {
+            const validationSummary = this.getValidationSummary();
+            
             if (progress === 100) {
-                statusText.textContent = '입력 완료! 문서를 생성할 수 있습니다.';
+                if (validationSummary.hasErrors) {
+                    statusText.textContent = `입력 완료, 하지만 ${validationSummary.errorCount}개 오류가 있습니다.`;
+                } else {
+                    statusText.textContent = '입력 완료! 문서를 생성할 수 있습니다.';
+                }
+            } else if (progress > 75) {
+                statusText.textContent = '거의 완료되었습니다.';
             } else if (progress > 50) {
                 statusText.textContent = '입력이 진행 중입니다.';
+            } else if (progress > 25) {
+                statusText.textContent = '좋은 시작입니다. 계속해주세요.';
             } else {
-                statusText.textContent = '입력을 계속해주세요.';
+                statusText.textContent = '입력을 시작해주세요.';
             }
         }
     }
@@ -470,6 +526,699 @@ class FormGenerator {
         // 이벤트 리스너는 app.js에서 중앙 관리
         // 중복 등록 방지를 위해 이 메서드는 비워둠
         console.log('🎧 이벤트 리스너 설정 완료 (app.js에서 중앙 관리)');
+    }
+
+    initializeConditionalFields() {
+        // 초기 로드 시 기본값에 따른 조건부 필드 상태 설정
+        const investmentType = this.getFieldValue('투자방식') || '전환상환우선주'; // 기본값
+        
+        console.log('🔄 초기 조건부 필드 상태 설정:', investmentType);
+        
+        // 투자방식에 따른 동적 라벨 업데이트
+        this.updateDynamicLabels(investmentType);
+        
+        // 조건부 필드 평가
+        this.evaluateConditionalFields('투자방식', investmentType);
+        
+        console.log('✅ 초기 조건부 필드 상태 설정 완료');
+    }
+    
+    // === 새로운 상태 관리 메서드들 ===
+    
+    recordChange(fieldKey, value) {
+        const change = {
+            field: fieldKey,
+            value: value,
+            timestamp: new Date(),
+            sessionId: this.getSessionId()
+        };
+        
+        this.changeHistory.push(change);
+        
+        // 이력 크기 제한
+        if (this.changeHistory.length > this.maxHistorySize) {
+            this.changeHistory = this.changeHistory.slice(-this.maxHistorySize);
+        }
+        
+        // dirty 상태 설정
+        this.formState.isDirty = true;
+        this.formState.lastModified = new Date();
+    }
+    
+    updateFieldState(fieldKey, value, fieldId) {
+        const fieldState = {
+            value: value,
+            isValid: true,
+            errors: [],
+            lastModified: new Date(),
+            isDirty: true
+        };
+        
+        // 필드 검증
+        if (this.dataValidator || window.DataValidator) {
+            const validator = this.dataValidator || window.DataValidator;
+            const validationResult = validator.validateField(fieldKey, value, this.getAllFieldValues());
+            
+            fieldState.isValid = validationResult.isValid;
+            fieldState.errors = validationResult.errors || [];
+        }
+        
+        this.formState.fieldStates.set(fieldKey, fieldState);
+        
+        // 검증 오류 업데이트
+        if (fieldState.errors.length > 0) {
+            this.formState.validationErrors.set(fieldKey, fieldState.errors);
+        } else {
+            this.formState.validationErrors.delete(fieldKey);
+        }
+    }
+    
+    updateFormState() {
+        // 전체 유효성 검사
+        const hasErrors = this.formState.validationErrors.size > 0;
+        this.formState.isValid = !hasErrors;
+        
+        // 완성도 계산은 updateProgress에서 처리
+        
+        // 상태 변경 이벤트 발생
+        this.emitStateChange();
+    }
+    
+    getVisibleFields() {
+        const visibleFields = [];
+        
+        for (const [fieldKey, fieldId] of this.fields.entries()) {
+            const fieldElement = document.querySelector(`[data-field-id="${fieldId}"]`);
+            if (fieldElement && fieldElement.style.display !== 'none' && !fieldElement.getAttribute('aria-hidden')) {
+                visibleFields.push(fieldKey);
+            }
+        }
+        
+        return visibleFields;
+    }
+    
+    getValidationSummary() {
+        const errorCount = this.formState.validationErrors.size;
+        const hasErrors = errorCount > 0;
+        const errors = [];
+        
+        for (const [fieldKey, fieldErrors] of this.formState.validationErrors.entries()) {
+            errors.push({
+                field: fieldKey,
+                errors: fieldErrors
+            });
+        }
+        
+        return {
+            hasErrors,
+            errorCount,
+            errors
+        };
+    }
+    
+    getSessionId() {
+        if (!this.sessionId) {
+            this.sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+        return this.sessionId;
+    }
+    
+    emitStateChange() {
+        // 커스텀 이벤트 발생
+        const event = new CustomEvent('formStateChange', {
+            detail: {
+                formState: { ...this.formState },
+                completionRate: this.formState.completionRate,
+                isValid: this.formState.isValid,
+                isDirty: this.formState.isDirty,
+                errorCount: this.formState.validationErrors.size
+            }
+        });
+        
+        document.dispatchEvent(event);
+    }
+    
+    getFormStateSnapshot() {
+        return {
+            state: { ...this.formState },
+            data: this.getAllFieldValues(),
+            history: [...this.changeHistory],
+            timestamp: new Date()
+        };
+    }
+    
+    resetFormState() {
+        this.formState.isDirty = false;
+        this.formState.isValid = false;
+        this.formState.lastModified = null;
+        this.formState.fieldStates.clear();
+        this.formState.validationErrors.clear();
+        this.formState.completionRate = 0;
+        this.changeHistory = [];
+        
+        this.emitStateChange();
+    }
+    
+    // === 워크플로우 최적화 기능 ===
+    
+    initializeWorkflowOptimization() {
+        console.log('🚀 워크플로우 최적화 기능 초기화 시작...');
+        
+        // 스마트 포커스 설정
+        this.setupSmartFocus();
+        
+        // 입력 힌트 시스템 설정
+        this.setupInputHints();
+        
+        // 진행률 애니메이션 설정
+        this.setupProgressAnimations();
+        
+        // 키보드 네비게이션 설정
+        this.setupKeyboardNavigation();
+        
+        // 자동 완성 기능
+        this.setupAutoComplete();
+        
+        // 고급 검증 시스템 초기화
+        this.initializeAdvancedValidation();
+        
+        console.log('✅ 워크플로우 최적화 기능 초기화 완료');
+    }
+    
+    /**
+     * 고급 검증 시스템 초기화
+     */
+    initializeAdvancedValidation() {
+        console.log('🔍 고급 검증 시스템 초기화...');
+        
+        // 검증 디바운스 타이머
+        this.validationTimer = null;
+        
+        // 검증 결과 캐시
+        this.validationCache = new Map();
+        
+        // 검증 UI 요소 생성
+        this.createValidationStatusUI();
+        
+        console.log('✅ 고급 검증 시스템 초기화 완료');
+    }
+    
+    /**
+     * 고급 검증 트리거 (디바운스)
+     */
+    triggerAdvancedValidation() {
+        clearTimeout(this.validationTimer);
+        this.validationTimer = setTimeout(() => {
+            this.performAdvancedValidation();
+        }, 500); // 500ms 디바운스
+    }
+    
+    /**
+     * 실시간 고급 검증 수행
+     */
+    async performAdvancedValidation() {
+        try {
+            const formData = this.getAllFieldValues();
+            
+            // 비어있는 데이터는 검증하지 않음
+            if (!formData || Object.keys(formData).length === 0) {
+                return;
+            }
+            
+            // DataValidator를 사용한 고급 검증
+            const validator = window.DataValidator;
+            if (!validator) {
+                console.warn('DataValidator를 사용할 수 없습니다.');
+                return;
+            }
+            
+            const validationResult = validator.validateAllFields(formData);
+            
+            // 검증 결과 시각화
+            this.visualizeValidationResults(validationResult);
+            
+            // 검증 상태 업데이트
+            this.updateValidationStatus(validationResult);
+            
+        } catch (error) {
+            console.error('고급 검증 수행 중 오류:', error);
+        }
+    }
+    
+    /**
+     * 검증 상태 UI 생성
+     */
+    createValidationStatusUI() {
+        // 검증 상태 표시 영역이 이미 있는지 확인
+        if (document.getElementById('validationStatus')) {
+            return;
+        }
+        
+        const actionBar = document.querySelector('.action-bar');
+        if (!actionBar) return;
+        
+        const validationStatus = document.createElement('div');
+        validationStatus.id = 'validationStatus';
+        validationStatus.className = 'validation-status waiting';
+        validationStatus.innerHTML = `
+            <span class="validation-icon">🔍</span>
+            <span class="validation-text">검증 대기 중</span>
+        `;
+        
+        // 자동 저장 상태 옆에 추가
+        const autoSaveStatus = actionBar.querySelector('#autoSaveStatus');
+        if (autoSaveStatus) {
+            actionBar.insertBefore(validationStatus, autoSaveStatus.nextSibling);
+        } else {
+            actionBar.appendChild(validationStatus);
+        }
+    }
+    
+    /**
+     * 검증 결과 시각화
+     */
+    visualizeValidationResults(validationResult) {
+        // 필드별 검증 결과 표시
+        for (const [fieldName, result] of Object.entries(validationResult.fieldResults)) {
+            this.updateFieldValidationUI(fieldName, result);
+        }
+        
+        // 전체 검증 요약 표시
+        this.showValidationSummary(validationResult.summary);
+    }
+    
+    /**
+     * 필드별 검증 UI 업데이트
+     */
+    updateFieldValidationUI(fieldName, result) {
+        const fieldElement = document.querySelector(`[data-field-name="${fieldName}"]`);
+        if (!fieldElement) return;
+        
+        const input = fieldElement.querySelector('.form-field-input');
+        const errorElement = fieldElement.querySelector('.form-field-error');
+        
+        if (!input || !errorElement) return;
+        
+        // 기존 검증 클래스 제거
+        fieldElement.classList.remove('validation-error', 'validation-warning', 'validation-success');
+        input.classList.remove('validation-error', 'validation-warning', 'validation-success');
+        
+        if (!result.isValid && result.errors.length > 0) {
+            // 오류 상태
+            fieldElement.classList.add('validation-error');
+            input.classList.add('validation-error');
+            errorElement.innerHTML = result.errors.join('<br>');
+            errorElement.style.display = 'block';
+        } else if (result.warnings && result.warnings.length > 0) {
+            // 경고 상태
+            fieldElement.classList.add('validation-warning');
+            input.classList.add('validation-warning');
+            errorElement.innerHTML = `⚠️ ${result.warnings.join('<br>⚠️ ')}`;
+            errorElement.style.display = 'block';
+        } else if (result.isValid) {
+            // 성공 상태
+            fieldElement.classList.add('validation-success');
+            input.classList.add('validation-success');
+            errorElement.style.display = 'none';
+        }
+    }
+    
+    /**
+     * 검증 상태 업데이트
+     */
+    updateValidationStatus(validationResult) {
+        const statusElement = document.getElementById('validationStatus');
+        if (!statusElement) return;
+        
+        const iconElement = statusElement.querySelector('.validation-icon');
+        const textElement = statusElement.querySelector('.validation-text');
+        
+        if (!iconElement || !textElement) return;
+        
+        // 기존 상태 클래스 제거
+        statusElement.classList.remove('waiting', 'validating', 'valid', 'invalid', 'warning');
+        
+        if (validationResult.isValid) {
+            if (validationResult.summary.warnings > 0) {
+                statusElement.classList.add('warning');
+                iconElement.textContent = '⚠️';
+                textElement.textContent = `검증 완료 (경고 ${validationResult.summary.warnings}개)`;
+            } else {
+                statusElement.classList.add('valid');
+                iconElement.textContent = '✅';
+                textElement.textContent = '검증 완료';
+            }
+        } else {
+            statusElement.classList.add('invalid');
+            iconElement.textContent = '❌';
+            textElement.textContent = `검증 실패 (오류 ${validationResult.summary.invalidFields}개)`;
+        }
+    }
+    
+    /**
+     * 검증 요약 표시
+     */
+    showValidationSummary(summary) {
+        // 심각한 오류가 있는 경우에만 토스트 표시
+        if (summary.invalidFields > 0) {
+            const errorCount = summary.invalidFields;
+            const warningCount = summary.warnings;
+            
+            let message = `검증 오류 ${errorCount}개 발견`;
+            if (warningCount > 0) {
+                message += `, 경고 ${warningCount}개`;
+            }
+            
+            // 토스트로 간단히 알림 (너무 자주 표시되지 않도록 제한)
+            if (!this.lastValidationToast || Date.now() - this.lastValidationToast > 5000) {
+                window.showToast?.('⚠️ ' + message, 'warning');
+                this.lastValidationToast = Date.now();
+            }
+        }
+    }
+    
+    setupSmartFocus() {
+        // Enter 키로 다음 필드로 이동
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.target.matches('input:not([type="submit"]), select, textarea')) {
+                e.preventDefault();
+                this.focusNextField(e.target);
+            }
+        });
+        
+        // 필드 완료 시 자동 다음 필드로 이동 (선택 필드)
+        document.addEventListener('change', (e) => {
+            if (e.target.matches('select')) {
+                setTimeout(() => {
+                    this.focusNextField(e.target);
+                }, 100);
+            }
+        });
+    }
+    
+    focusNextField(currentField) {
+        const allFields = this.getVisibleFieldElements();
+        const currentIndex = allFields.indexOf(currentField);
+        
+        if (currentIndex >= 0 && currentIndex < allFields.length - 1) {
+            const nextField = allFields[currentIndex + 1];
+            nextField.focus();
+            
+            // 스크롤 애니메이션
+            nextField.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+            
+            // 포커스 하이라이트 효과
+            this.highlightField(nextField);
+        }
+    }
+    
+    getVisibleFieldElements() {
+        const fields = [];
+        for (const [fieldKey, fieldId] of this.fields.entries()) {
+            const fieldElement = document.querySelector(`[data-field-id="${fieldId}"]`);
+            if (fieldElement && fieldElement.style.display !== 'none') {
+                const input = fieldElement.querySelector('input, select, textarea');
+                if (input && !input.disabled && !input.readOnly) {
+                    fields.push(input);
+                }
+            }
+        }
+        return fields;
+    }
+    
+    highlightField(fieldElement) {
+        const fieldContainer = fieldElement.closest('.form-field');
+        if (fieldContainer) {
+            fieldContainer.classList.add('field-highlighted');
+            setTimeout(() => {
+                fieldContainer.classList.remove('field-highlighted');
+            }, 2000);
+        }
+    }
+    
+    setupInputHints() {
+        // 실시간 입력 가이드
+        document.addEventListener('input', (e) => {
+            if (e.target.matches('input, textarea')) {
+                this.showInputHint(e.target);
+            }
+        });
+        
+        document.addEventListener('focus', (e) => {
+            if (e.target.matches('input, textarea, select')) {
+                this.showFieldGuidance(e.target);
+            }
+        });
+        
+        document.addEventListener('blur', (e) => {
+            if (e.target.matches('input, textarea, select')) {
+                this.hideFieldGuidance(e.target);
+            }
+        });
+    }
+    
+    showInputHint(inputElement) {
+        const fieldContainer = inputElement.closest('.form-field');
+        const fieldName = fieldContainer?.getAttribute('data-field-name');
+        
+        if (!fieldName || !fieldContainer) return;
+        
+        const hint = this.getInputHint(fieldName, inputElement.value);
+        if (hint) {
+            let hintElement = fieldContainer.querySelector('.input-hint');
+            if (!hintElement) {
+                hintElement = document.createElement('div');
+                hintElement.className = 'input-hint';
+                fieldContainer.appendChild(hintElement);
+            }
+            hintElement.innerHTML = hint;
+            hintElement.style.display = 'block';
+        }
+    }
+    
+    getInputHint(fieldName, value) {
+        const hints = {
+            '투자금액': (val) => {
+                const num = parseFloat(val);
+                if (!isNaN(num) && num > 0) {
+                    return `💰 ${num}억원 = ${(num * 100000000).toLocaleString()}원`;
+                }
+                return null;
+            },
+            '투자단가': (val) => {
+                const num = parseFloat(val);
+                if (!isNaN(num) && num > 0) {
+                    return `💎 주당 ${num.toLocaleString()}원`;
+                }
+                return null;
+            },
+            '투자전가치': (val) => {
+                const num = parseFloat(val);
+                if (!isNaN(num) && num > 0) {
+                    return `🏢 기업가치 ${num}억원`;
+                }
+                return null;
+            }
+        };
+        
+        const hintFn = hints[fieldName];
+        return hintFn ? hintFn(value) : null;
+    }
+    
+    showFieldGuidance(inputElement) {
+        const fieldContainer = inputElement.closest('.form-field');
+        const fieldName = fieldContainer?.getAttribute('data-field-name');
+        
+        if (!fieldName) return;
+        
+        const guidance = this.getFieldGuidance(fieldName);
+        if (guidance) {
+            this.showTooltip(inputElement, guidance);
+        }
+    }
+    
+    getFieldGuidance(fieldName) {
+        const guidances = {
+            '투자대상': '회사의 정확한 법인명을 입력하세요 (예: 테크스타트업(주))',
+            '투자금액': '투자하려는 금액을 억원 단위로 입력하세요',
+            '투자방식': '투자 방식에 따라 표시되는 필드가 달라집니다',
+            'Series': '현재 투자 라운드를 선택하세요',
+            '상환이자': '우선주 상환 시 적용할 연이자율입니다',
+            '지분율': '투자금액과 투자후가치를 바탕으로 자동 계산됩니다'
+        };
+        
+        return guidances[fieldName] || null;
+    }
+    
+    showTooltip(element, text) {
+        // 기존 툴팁 제거
+        this.hideAllTooltips();
+        
+        const tooltip = document.createElement('div');
+        tooltip.className = 'field-tooltip';
+        tooltip.textContent = text;
+        
+        const rect = element.getBoundingClientRect();
+        tooltip.style.position = 'fixed';
+        tooltip.style.top = `${rect.bottom + 5}px`;
+        tooltip.style.left = `${rect.left}px`;
+        tooltip.style.zIndex = '1000';
+        
+        document.body.appendChild(tooltip);
+        
+        // 자동 제거
+        setTimeout(() => {
+            if (tooltip.parentNode) {
+                tooltip.parentNode.removeChild(tooltip);
+            }
+        }, 3000);
+    }
+    
+    hideFieldGuidance(inputElement) {
+        this.hideAllTooltips();
+    }
+    
+    hideAllTooltips() {
+        const tooltips = document.querySelectorAll('.field-tooltip');
+        tooltips.forEach(tooltip => {
+            if (tooltip.parentNode) {
+                tooltip.parentNode.removeChild(tooltip);
+            }
+        });
+    }
+    
+    setupProgressAnimations() {
+        // 진행률 바 애니메이션 개선
+        const progressFill = document.getElementById('progressFill');
+        if (progressFill) {
+            progressFill.style.transition = 'width 0.3s ease-in-out';
+        }
+        
+        // 섹션별 완성도 표시
+        this.addSectionProgress();
+    }
+    
+    addSectionProgress() {
+        for (const [sectionKey, sectionId] of this.sections.entries()) {
+            const sectionElement = document.querySelector(`[data-section-id="${sectionId}"]`);
+            if (sectionElement) {
+                const header = sectionElement.querySelector('.form-section-header');
+                if (header && !header.querySelector('.section-progress')) {
+                    const progressElement = document.createElement('div');
+                    progressElement.className = 'section-progress';
+                    progressElement.innerHTML = '<span class="progress-text">0%</span>';
+                    header.appendChild(progressElement);
+                }
+            }
+        }
+    }
+    
+    setupKeyboardNavigation() {
+        // 섹션 접기/펼치기 키보드 단축키
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch (e.key) {
+                    case '1':
+                    case '2':
+                    case '3':
+                    case '4':
+                        e.preventDefault();
+                        this.focusSection(parseInt(e.key) - 1);
+                        break;
+                    case 's':
+                        e.preventDefault();
+                        this.saveData();
+                        break;
+                }
+            }
+        });
+    }
+    
+    focusSection(sectionIndex) {
+        const sectionKeys = Array.from(this.sections.keys());
+        if (sectionIndex < sectionKeys.length) {
+            const sectionKey = sectionKeys[sectionIndex];
+            const sectionId = this.sections.get(sectionKey);
+            const sectionElement = document.querySelector(`[data-section-id="${sectionId}"]`);
+            
+            if (sectionElement) {
+                sectionElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+                // 첫 번째 필드에 포커스
+                const firstField = sectionElement.querySelector('input, select, textarea');
+                if (firstField) {
+                    setTimeout(() => {
+                        firstField.focus();
+                    }, 300);
+                }
+            }
+        }
+    }
+    
+    setupAutoComplete() {
+        // 회사명 자동완성 (예시 데이터)
+        const companyData = [
+            '테크스타트업(주)', '이노베이션코퍼레이션(주)', 
+            '디지털벤처스(주)', '스마트솔루션(주)'
+        ];
+        
+        document.addEventListener('input', (e) => {
+            const fieldContainer = e.target.closest('.form-field');
+            const fieldName = fieldContainer?.getAttribute('data-field-name');
+            
+            if (fieldName === '투자대상' && e.target.value.length > 1) {
+                this.showAutoComplete(e.target, companyData, e.target.value);
+            }
+        });
+    }
+    
+    showAutoComplete(input, suggestions, query) {
+        const filtered = suggestions.filter(item => 
+            item.toLowerCase().includes(query.toLowerCase())
+        );
+        
+        if (filtered.length === 0) return;
+        
+        // 기존 자동완성 제거
+        const existing = document.querySelector('.autocomplete-dropdown');
+        if (existing) existing.remove();
+        
+        const dropdown = document.createElement('div');
+        dropdown.className = 'autocomplete-dropdown';
+        
+        filtered.forEach(item => {
+            const option = document.createElement('div');
+            option.className = 'autocomplete-option';
+            option.textContent = item;
+            option.addEventListener('click', () => {
+                input.value = item;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+                dropdown.remove();
+            });
+            dropdown.appendChild(option);
+        });
+        
+        const rect = input.getBoundingClientRect();
+        dropdown.style.position = 'fixed';
+        dropdown.style.top = `${rect.bottom}px`;
+        dropdown.style.left = `${rect.left}px`;
+        dropdown.style.width = `${rect.width}px`;
+        dropdown.style.zIndex = '1000';
+        
+        document.body.appendChild(dropdown);
+        
+        // 외부 클릭 시 제거
+        setTimeout(() => {
+            document.addEventListener('click', function closeDropdown(e) {
+                if (!dropdown.contains(e.target) && e.target !== input) {
+                    dropdown.remove();
+                    document.removeEventListener('click', closeDropdown);
+                }
+            });
+        }, 0);
     }
 
     saveData() {
@@ -508,6 +1257,15 @@ class FormGenerator {
         for (const [fieldKey, value] of Object.entries(data)) {
             this.setFieldValue(fieldKey, value);
         }
+        
+        // 투자방식에 따른 라벨 업데이트 (데이터 로드 시)
+        if (data['투자방식']) {
+            this.updateDynamicLabels(data['투자방식']);
+        }
+        
+        // 조건부 필드 초기 평가 (데이터 로드 시)
+        this.evaluateConditionalFields('init', null);
+        
         this.updateProgress();
     }
 
@@ -515,6 +1273,13 @@ class FormGenerator {
         for (const [fieldKey, fieldId] of this.fields.entries()) {
             window.FormField.setValue(fieldId, '');
         }
+        
+        // 상태 초기화
+        this.resetFormState();
+        
+        // 조건부 필드 초기화
+        this.initializeConditionalFields();
+        
         this.updateProgress();
     }
 
@@ -593,14 +1358,261 @@ class FormGenerator {
             });
     }
 
+    evaluateConditionalFields(changedFieldKey, changedValue) {
+        // 모든 조건부 필드를 검사하여 표시/숨기기 결정
+        for (const [fieldKey, fieldId] of this.fields.entries()) {
+            const fieldConfig = this.findFieldConfig(fieldKey);
+            
+            if (fieldConfig && fieldConfig.conditional) {
+                const conditionField = fieldConfig.conditionField || changedFieldKey;
+                const conditionValue = fieldConfig.conditionValue;
+                const conditionOperator = fieldConfig.conditionOperator || 'equals';
+                
+                // 조건 필드가 변경된 필드와 일치하거나 초기 로드인 경우
+                if (conditionField === changedFieldKey || changedFieldKey === 'init') {
+                    const currentValue = changedFieldKey === conditionField ? changedValue : this.getFieldValue(conditionField);
+                    const shouldShow = this.evaluateCondition(currentValue, conditionValue, conditionOperator);
+                    
+                    this.toggleFieldVisibility(fieldKey, fieldId, shouldShow);
+                }
+            }
+        }
+    }
+    
+    evaluateCondition(fieldValue, conditionValue, operator) {
+        switch (operator) {
+            case 'equals':
+                return fieldValue === conditionValue;
+            case 'not_equals':
+                return fieldValue !== conditionValue;
+            case 'greater_than':
+                return parseFloat(fieldValue) > parseFloat(conditionValue);
+            case 'less_than':
+                return parseFloat(fieldValue) < parseFloat(conditionValue);
+            case 'not_empty':
+                return fieldValue && fieldValue.toString().trim() !== '';
+            case 'empty':
+                return !fieldValue || fieldValue.toString().trim() === '';
+            case 'contains':
+                return fieldValue && fieldValue.toString().includes(conditionValue);
+            case 'in_list':
+                return Array.isArray(conditionValue) && conditionValue.includes(fieldValue);
+            case 'not_in_list':
+                return Array.isArray(conditionValue) && !conditionValue.includes(fieldValue);
+            default:
+                return true;
+        }
+    }
+    
+    toggleFieldVisibility(fieldKey, fieldId, shouldShow) {
+        const fieldElement = document.querySelector(`[data-field-id="${fieldId}"]`);
+        if (fieldElement) {
+            if (shouldShow) {
+                fieldElement.style.display = '';
+                fieldElement.removeAttribute('aria-hidden');
+            } else {
+                fieldElement.style.display = 'none';
+                fieldElement.setAttribute('aria-hidden', 'true');
+                // 숨겨진 필드의 값은 초기화하지 않음 (사용자가 다시 조건을 만족시킬 경우를 대비)
+            }
+        }
+    }
+    
+    getFieldValue(fieldKey) {
+        const fieldId = this.fields.get(fieldKey);
+        if (fieldId) {
+            return window.FormField.getValue(fieldId);
+        }
+        return null;
+    }
+    
+    updateDynamicLabels(investmentType) {
+        const labelMappings = {
+            '전환사채': {
+                '인수주식수': '전환주식수',
+                '지분율': '전환시지분율'
+            },
+            '보통주': {
+                '인수주식수': '인수주식수',
+                '지분율': '지분율'
+            },
+            '전환우선주': {
+                '인수주식수': '인수주식수', 
+                '지분율': '지분율'
+            },
+            '전환상환우선주': {
+                '인수주식수': '인수주식수',
+                '지분율': '지분율'
+            }
+        };
+        
+        const mapping = labelMappings[investmentType];
+        if (!mapping) return;
+        
+        // 라벨 업데이트
+        for (const [fieldKey, newLabel] of Object.entries(mapping)) {
+            const fieldId = this.fields.get(fieldKey);
+            if (fieldId) {
+                const fieldElement = document.querySelector(`[data-field-id="${fieldId}"]`);
+                if (fieldElement) {
+                    const labelElement = fieldElement.querySelector('.form-field-label');
+                    if (labelElement) {
+                        labelElement.textContent = newLabel;
+                    }
+                }
+            }
+        }
+        
+        // 도움말 텍스트도 업데이트
+        this.updateHelpTexts(investmentType);
+    }
+    
+    updateHelpTexts(investmentType) {
+        const helpTextMappings = {
+            '전환사채': {
+                '인수주식수': '자동 계산됩니다 (전환 시 취득할 주식수)',
+                '지분율': '자동 계산됩니다 (전환 시 예상 지분율)'
+            },
+            '보통주': {
+                '인수주식수': '자동 계산됩니다 (투자금액(억원) × 1억 ÷ 투자단가)',
+                '지분율': '자동 계산됩니다 (투자금액 ÷ 투자후가치 × 100)'
+            },
+            '전환우선주': {
+                '인수주식수': '자동 계산됩니다 (투자금액(억원) × 1억 ÷ 투자단가)',
+                '지분율': '자동 계산됩니다 (투자금액 ÷ 투자후가치 × 100)'
+            },
+            '전환상환우선주': {
+                '인수주식수': '자동 계산됩니다 (투자금액(억원) × 1억 ÷ 투자단가)',
+                '지분율': '자동 계산됩니다 (투자금액 ÷ 투자후가치 × 100)'
+            }
+        };
+        
+        const mapping = helpTextMappings[investmentType];
+        if (!mapping) return;
+        
+        for (const [fieldKey, newHelpText] of Object.entries(mapping)) {
+            const fieldId = this.fields.get(fieldKey);
+            if (fieldId) {
+                const fieldElement = document.querySelector(`[data-field-id="${fieldId}"]`);
+                if (fieldElement) {
+                    const helpElement = fieldElement.querySelector('.form-field-help');
+                    if (helpElement) {
+                        helpElement.textContent = newHelpText;
+                    }
+                }
+            }
+        }
+    }
+
     autoSave() {
         // 자동 저장 설정이 활성화된 경우
         const settings = window.StorageManager.loadSettings();
-        if (settings.autoSave) {
+        if (settings.autoSave && this.formState.isDirty) {
+            // 이전 타이머 취소
             clearTimeout(this.autoSaveTimer);
+            
+            // 디바운스 후 자동 저장 실행
             this.autoSaveTimer = setTimeout(() => {
-                this.saveData();
+                this.performAutoSave();
             }, settings.autoSaveInterval || 30000);
+            
+            // 상태 표시 업데이트
+            this.updateAutoSaveStatus('대기 중');
+        }
+    }
+    
+    performAutoSave() {
+        try {
+            console.log('💾 자동 저장 시작...');
+            
+            // 상태 표시
+            this.updateAutoSaveStatus('저장 중');
+            
+            // 데이터 수집 및 검증
+            const data = this.getAllFieldValues();
+            const hasData = Object.values(data).some(value => 
+                value !== null && value !== undefined && value !== ''
+            );
+            
+            if (!hasData) {
+                console.log('💾 빈 데이터로 인해 자동 저장 건너뛜');
+                this.updateAutoSaveStatus('대기 중');
+                return;
+            }
+            
+            // 데이터 저장
+            const success = window.StorageManager.save(data);
+            
+            if (success) {
+                console.log('✅ 자동 저장 성공');
+                this.updateAutoSaveStatus('저장됨', new Date());
+                
+                // 성공 토스트 (자동 숨김)
+                if (window.Toast) {
+                    window.Toast.success('자동 저장됨', {
+                        duration: 2000,
+                        position: 'bottom-right'
+                    });
+                }
+            } else {
+                console.error('❌ 자동 저장 실패');
+                this.updateAutoSaveStatus('오류');
+                
+                if (window.Toast) {
+                    window.Toast.error('자동 저장 실패');
+                }
+            }
+            
+        } catch (error) {
+            console.error('❌ 자동 저장 오류:', error);
+            this.updateAutoSaveStatus('오류');
+            
+            if (window.Toast) {
+                window.Toast.error('자동 저장 오류: ' + error.message);
+            }
+        } finally {
+            // 다음 자동 저장 예약
+            this.scheduleNextAutoSave();
+        }
+    }
+    
+    scheduleNextAutoSave() {
+        const settings = window.StorageManager.loadSettings();
+        if (settings.autoSave) {
+            setTimeout(() => {
+                this.updateAutoSaveStatus('대기 중');
+            }, 3000); // 3초 후 상태 리셋
+        }
+    }
+    
+    updateAutoSaveStatus(status, timestamp = null) {
+        const statusElement = document.getElementById('autoSaveStatus');
+        if (statusElement) {
+            let statusText = '';
+            let className = 'auto-save-status';
+            
+            switch (status) {
+                case '대기 중':
+                    statusText = '🔄 자동 저장 대기 중';
+                    className += ' waiting';
+                    break;
+                case '저장 중':
+                    statusText = '💾 저장 중...';
+                    className += ' saving';
+                    break;
+                case '저장됨':
+                    const timeStr = timestamp ? timestamp.toLocaleTimeString() : '';
+                    statusText = `✅ 자동 저장됨 ${timeStr}`;
+                    className += ' saved';
+                    break;
+                case '오류':
+                    statusText = '❌ 자동 저장 실패';
+                    className += ' error';
+                    break;
+            }
+            
+            statusElement.textContent = statusText;
+            statusElement.className = className;
         }
     }
 }
