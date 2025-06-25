@@ -296,6 +296,200 @@ class InvestmentDocumentApp {
         element.addEventListener('click', handler);
       }
     });
+
+    // 네비게이션 버튼들 (data-action 속성 사용)
+    const navButtons = document.querySelectorAll('.nav-button[data-action]');
+    navButtons.forEach(button => {
+      button.addEventListener('click', (event) => {
+        const action = event.target.getAttribute('data-action');
+        this.handleNavAction(action);
+      });
+    });
+  }
+
+  /**
+   * 네비게이션 액션 처리
+   * @param {string} action - 액션 타입
+   */
+  handleNavAction(action) {
+    try {
+      switch (action) {
+        case 'help':
+          this.showHelpModal();
+          break;
+        case 'settings':
+          this.showSettingsModal();
+          break;
+        default:
+          console.warn('알 수 없는 네비게이션 액션:', action);
+      }
+    } catch (error) {
+      console.error('네비게이션 액션 처리 실패:', error);
+    }
+  }
+
+  /**
+   * 도움말 모달 표시
+   */
+  showHelpModal() {
+    const helpContent = `
+      <div class="help-modal-content">
+        <h3 style="margin-bottom: 20px; color: var(--primary-color);">💼 투자문서 생성기 사용법</h3>
+        
+        <div class="help-section">
+          <h4>📋 기본 사용법</h4>
+          <ol>
+            <li><strong>폼 작성</strong>: 각 섹션의 필드를 차례대로 입력하세요</li>
+            <li><strong>자동 계산</strong>: 투자금액, 지분율 등이 자동으로 계산됩니다</li>
+            <li><strong>문서 생성</strong>: Term Sheet 또는 예비투심위 보고서를 생성하세요</li>
+            <li><strong>파일 관리</strong>: Excel로 저장하거나 불러올 수 있습니다</li>
+          </ol>
+        </div>
+
+        <div class="help-section">
+          <h4>📄 문서 유형</h4>
+          <ul>
+            <li><strong>Term Sheet</strong>: 간결형 (14개 필수 필드)</li>
+            <li><strong>예비투심위 보고서</strong>: 완전형 (20개 필수 필드)</li>
+          </ul>
+        </div>
+
+        <div class="help-section">
+          <h4>⌨️ 키보드 단축키</h4>
+          <div class="shortcut-grid">
+            <div class="shortcut-item">
+              <kbd>Ctrl + S</kbd>
+              <span>Excel로 저장</span>
+            </div>
+            <div class="shortcut-item">
+              <kbd>Ctrl + O</kbd>
+              <span>Excel에서 열기</span>
+            </div>
+            <div class="shortcut-item">
+              <kbd>Ctrl + G</kbd>
+              <span>모든 문서 생성</span>
+            </div>
+            <div class="shortcut-item">
+              <kbd>Ctrl + T</kbd>
+              <span>Term Sheet 생성</span>
+            </div>
+            <div class="shortcut-item">
+              <kbd>Ctrl + P</kbd>
+              <span>예비투심위 생성</span>
+            </div>
+            <div class="shortcut-item">
+              <kbd>Ctrl + R</kbd>
+              <span>데이터 초기화</span>
+            </div>
+            <div class="shortcut-item">
+              <kbd>Enter</kbd>
+              <span>모든 문서 생성</span>
+            </div>
+            <div class="shortcut-item">
+              <kbd>Escape</kbd>
+              <span>모달 닫기</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="help-section">
+          <h4>💡 사용 팁</h4>
+          <ul>
+            <li>필드 옆의 <strong>?</strong> 아이콘을 클릭하면 상세 설명을 볼 수 있습니다</li>
+            <li>화폐 단위는 우측 상단에서 변경할 수 있습니다</li>
+            <li>데이터는 자동으로 저장되며, Excel 파일로 백업할 수 있습니다</li>
+            <li>필수 필드가 부족하면 문서 생성 시 안내됩니다</li>
+          </ul>
+        </div>
+
+        <div class="help-section">
+          <h4>🔧 문제 해결</h4>
+          <ul>
+            <li><strong>문서 생성 실패</strong>: 필수 필드를 모두 입력했는지 확인하세요</li>
+            <li><strong>파일 저장 안됨</strong>: 브라우저 다운로드 권한을 확인하세요</li>
+            <li><strong>계산 오류</strong>: 숫자 형식이 올바른지 확인하세요</li>
+            <li><strong>화면 깨짐</strong>: 브라우저를 새로고침하세요</li>
+          </ul>
+        </div>
+      </div>
+    `;
+
+    window.Modal.show({
+      title: '📚 도움말',
+      content: helpContent,
+      size: 'large',
+      closable: true
+    });
+  }
+
+  /**
+   * 설정 모달 표시
+   */
+  showSettingsModal() {
+    const settingsContent = `
+      <div class="settings-modal-content">
+        <h3 style="margin-bottom: 20px; color: var(--primary-color);">⚙️ 설정</h3>
+        
+        <div class="settings-section">
+          <h4>🎨 테마</h4>
+          <div class="setting-item">
+            <label>
+              <input type="radio" name="theme" value="light" checked>
+              <span>라이트 모드</span>
+            </label>
+          </div>
+          <div class="setting-item">
+            <label>
+              <input type="radio" name="theme" value="dark">
+              <span>다크 모드 (개발 중)</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h4>💾 데이터</h4>
+          <div class="setting-item">
+            <label>
+              <input type="checkbox" checked>
+              <span>자동 저장 활성화</span>
+            </label>
+          </div>
+          <div class="setting-item">
+            <label>
+              <input type="checkbox" checked>
+              <span>입력 중 실시간 계산</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h4>📄 문서</h4>
+          <div class="setting-item">
+            <label>
+              <input type="checkbox" checked>
+              <span>생성 후 자동 다운로드</span>
+            </label>
+          </div>
+          <div class="setting-item">
+            <label>
+              <input type="checkbox">
+              <span>문서 생성 시 미리보기 표시</span>
+            </label>
+          </div>
+        </div>
+
+        <p style="margin-top: 20px; color: #666; font-size: 0.9em;">
+          ⚠️ 설정 기능은 향후 업데이트에서 제공될 예정입니다.
+        </p>
+      </div>
+    `;
+
+    window.Modal.show({
+      title: '⚙️ 설정',
+      content: settingsContent,
+      size: 'medium',
+      closable: true
+    });
   }
 
   /**

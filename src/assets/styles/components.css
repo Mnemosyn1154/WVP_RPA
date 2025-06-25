@@ -333,229 +333,6 @@
     margin-left: var(--spacing-xs);
 }
 
-/* Tooltip Styles */
-.tooltip-container {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    margin-left: var(--spacing-xs);
-}
-
-.tooltip-trigger {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 16px;
-    height: 16px;
-    background: var(--color-primary);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    font-size: 11px;
-    font-weight: bold;
-    cursor: help !important;
-    transition: all 0.2s ease;
-    position: relative;
-    z-index: 1;
-    pointer-events: auto;
-}
-
-.tooltip-trigger:hover {
-    background: var(--color-primary-dark);
-    transform: scale(1.1);
-}
-
-.tooltip-trigger:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px var(--color-primary-alpha);
-}
-
-.tooltip-icon {
-    line-height: 1;
-    font-style: normal;
-}
-
-.tooltip-popup {
-    position: fixed;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-lg);
-    min-width: 280px;
-    max-width: 400px;
-    z-index: 10000;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.15s ease, visibility 0.15s ease;
-}
-
-.tooltip-popup.show {
-    opacity: 1;
-    visibility: visible;
-}
-
-/* 툴팁 정렬 클래스들 - fixed positioning에서는 JavaScript가 위치 계산 */
-.tooltip-popup.align-top {
-    /* 위쪽 표시 시 추가 스타일 (필요시) */
-}
-
-.tooltip-popup.align-left {
-    /* 왼쪽 정렬 시 추가 스타일 (필요시) */
-}
-
-.tooltip-popup.align-right {
-    /* 오른쪽 정렬 시 추가 스타일 (필요시) */
-}
-
-/* 툴팁 화살표는 fixed positioning에서 제거 */
-
-.tooltip-content {
-    padding: 0;
-}
-
-.tooltip-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--spacing-sm) var(--spacing-md);
-    border-bottom: 1px solid var(--color-border);
-    background: var(--color-background);
-    border-radius: var(--border-radius) var(--border-radius) 0 0;
-}
-
-.tooltip-title {
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text);
-    margin: 0;
-}
-
-.tooltip-close {
-    background: none;
-    border: none;
-    font-size: 16px;
-    color: var(--color-text-secondary);
-    cursor: pointer;
-    padding: 0;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: all 0.2s ease;
-}
-
-.tooltip-close:hover {
-    background: var(--color-hover);
-    color: var(--color-text);
-}
-
-.tooltip-body {
-    padding: var(--spacing-md);
-}
-
-.tooltip-description {
-    font-size: var(--font-size-sm);
-    color: var(--color-text);
-    margin: 0 0 var(--spacing-sm) 0;
-    line-height: 1.5;
-}
-
-.tooltip-format,
-.tooltip-example,
-.tooltip-notes,
-.tooltip-formula {
-    font-size: var(--font-size-xs);
-    margin-bottom: var(--spacing-xs);
-    padding: var(--spacing-xs);
-    border-radius: var(--border-radius-sm);
-    line-height: 1.4;
-}
-
-.tooltip-format {
-    background: var(--color-primary-light);
-    color: var(--color-primary-dark);
-    border: 1px solid var(--color-primary-alpha);
-}
-
-.tooltip-example {
-    background: var(--color-success-light);
-    color: var(--color-success-dark);
-    border: 1px solid rgba(40, 167, 69, 0.2);
-}
-
-.tooltip-notes {
-    background: var(--color-warning-light);
-    color: var(--color-warning-dark);
-    border: 1px solid rgba(255, 193, 7, 0.2);
-}
-
-.tooltip-formula {
-    background: var(--color-background);
-    color: var(--color-text-secondary);
-    border: 1px solid var(--color-border);
-    font-family: monospace;
-    font-size: 11px;
-}
-
-.tooltip-format strong,
-.tooltip-example strong,
-.tooltip-notes strong,
-.tooltip-formula strong {
-    font-weight: var(--font-weight-semibold);
-}
-
-/* 반응형 툴팁 */
-@media (max-width: 767.98px) {
-    .tooltip-popup {
-        min-width: 260px;
-        max-width: calc(100vw - 32px);
-        left: 50%;
-        right: auto;
-        transform: translateX(-50%);
-    }
-    
-    .tooltip-popup.align-right {
-        left: 50%;
-        right: auto;
-        transform: translateX(-50%);
-    }
-    
-    .tooltip-popup.align-right::before,
-    .tooltip-popup.align-right::after {
-        left: 50%;
-        right: auto;
-        transform: translateX(-50%);
-    }
-}
-
-/* 다크모드 툴팁 지원 */
-@media (prefers-color-scheme: dark) {
-    .tooltip-trigger {
-        background: var(--color-primary);
-    }
-    
-    .tooltip-trigger:hover {
-        background: var(--color-primary-dark);
-    }
-    
-    .tooltip-format {
-        background: rgba(74, 158, 255, 0.1);
-        color: var(--color-primary);
-    }
-    
-    .tooltip-example {
-        background: rgba(40, 167, 69, 0.1);
-        color: var(--color-success);
-    }
-    
-    .tooltip-notes {
-        background: rgba(255, 193, 7, 0.1);
-        color: var(--color-warning);
-    }
-}
-
 /* Buttons */
 .btn {
     display: inline-flex;
@@ -897,4 +674,138 @@
         max-height: 0;
         overflow: hidden;
     }
+}
+
+/* ===== HELP MODAL STYLES ===== */
+
+.help-modal-content {
+    line-height: 1.6;
+}
+
+.help-section {
+    margin-bottom: var(--spacing-lg);
+}
+
+.help-section h4 {
+    margin: 0 0 var(--spacing-sm) 0;
+    color: var(--color-primary);
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semibold);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.help-section ol,
+.help-section ul {
+    margin: 0;
+    padding-left: var(--spacing-lg);
+}
+
+.help-section li {
+    margin-bottom: var(--spacing-xs);
+    color: var(--color-text);
+}
+
+.help-section li strong {
+    color: var(--color-text);
+    font-weight: var(--font-weight-semibold);
+}
+
+/* 키보드 단축키 그리드 */
+.shortcut-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-sm);
+}
+
+.shortcut-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-sm);
+    background: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-sm);
+    transition: all 0.2s ease;
+}
+
+.shortcut-item:hover {
+    background: var(--color-hover);
+    border-color: var(--color-primary);
+}
+
+.shortcut-item kbd {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.shortcut-item span {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+/* 설정 모달 스타일 */
+.settings-modal-content {
+    line-height: 1.6;
+}
+
+.settings-section {
+    margin-bottom: var(--spacing-lg);
+}
+
+.settings-section h4 {
+    margin: 0 0 var(--spacing-sm) 0;
+    color: var(--color-primary);
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-semibold);
+}
+
+.setting-item {
+    margin-bottom: var(--spacing-sm);
+}
+
+.setting-item label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    cursor: pointer;
+    padding: var(--spacing-xs);
+    border-radius: var(--border-radius-sm);
+    transition: background-color 0.2s ease;
+}
+
+.setting-item label:hover {
+    background: var(--color-hover);
+}
+
+.setting-item input[type="radio"],
+.setting-item input[type="checkbox"] {
+    margin: 0;
+}
+
+.setting-item span {
+    font-size: var(--font-size-sm);
+    color: var(--color-text);
+}
+
+/* 모달 크기 조정 */
+.modal-large {
+    max-width: 800px;
+}
+
+.modal-medium {
+    max-width: 600px;
+}
+
+.modal-small {
+    max-width: 400px;
 } 
