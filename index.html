@@ -36,8 +36,9 @@
                 <div class="currency-selector-container" id="currencySelectorContainer">
                     <!-- 화폐 선택기가 여기에 동적으로 추가됩니다 -->
                 </div>
-                <button class="nav-button" data-action="help">도움말</button>
-                <button class="nav-button" data-action="settings">설정</button>
+                <button class="nav-button" data-action="history" title="작업 히스토리 보기">히스토리</button>
+                <button class="nav-button" data-action="help" title="도움말 보기">도움말</button>
+                <button class="nav-button" data-action="settings" title="설정 열기">설정</button>
             </nav>
         </div>
     </header>
@@ -95,22 +96,28 @@
             </div>
             
             <div class="action-group">
-                <button class="btn btn-outline" id="previewBtn">
-                    <span class="btn-icon">👁️</span>
-                    미리보기
-                </button>
                 <div class="btn-with-info">
-                    <button class="btn btn-primary" id="generateTermSheetBtn">
-                        <span class="btn-icon">📄</span>
-                        Term Sheet 생성
-                    </button>
+                    <div class="btn-group">
+                        <button class="btn btn-outline" id="previewTermSheetBtn" title="Term Sheet 미리보기">
+                            <span class="btn-icon">👁️</span>
+                        </button>
+                        <button class="btn btn-primary" id="generateTermSheetBtn">
+                            <span class="btn-icon">📄</span>
+                            Term Sheet 생성
+                        </button>
+                    </div>
                     <small class="btn-info">간결형 (14개 필수)</small>
                 </div>
                 <div class="btn-with-info">
-                    <button class="btn btn-primary" id="generatePreliminaryBtn">
-                        <span class="btn-icon">📋</span>
-                        예비투심위 생성
-                    </button>
+                    <div class="btn-group">
+                        <button class="btn btn-outline" id="previewPreliminaryBtn" title="예비투심위 미리보기">
+                            <span class="btn-icon">👁️</span>
+                        </button>
+                        <button class="btn btn-primary" id="generatePreliminaryBtn">
+                            <span class="btn-icon">📋</span>
+                            예비투심위 생성
+                        </button>
+                    </div>
                     <small class="btn-info">완전형 (20개 필수)</small>
                 </div>
                 <div class="btn-with-info">
@@ -152,12 +159,16 @@
     <script src="src/utils/CurrencyManager.js"></script>
     <script src="src/utils/ExcelProcessor.js"></script>
     <script src="src/utils/FileManager.js"></script>
+    <script src="src/utils/HistoryManager.js"></script>
     
     <script src="src/components/Toast.js"></script>
     <script src="src/components/Modal.js"></script>
     <script src="src/components/Button.js"></script>
     <script src="src/components/FormField.js"></script>
     <script src="src/components/FormSection.js"></script>
+    <script src="src/components/DocumentPreview.js"></script>
+    <script src="src/components/HistoryModal.js"></script>
+    <script src="src/components/UserGuide.js"></script>
     
     <script src="src/core/DataValidator.js"></script>
     <script src="src/core/CalculationEngine.js"></script>

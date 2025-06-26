@@ -419,6 +419,29 @@
     padding: 0;
 }
 
+/* Button Group for Preview + Generate */
+.btn-group {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+}
+
+.btn-group .btn-outline {
+    padding: 0.75rem 1rem;
+    border-right: none;
+    border-radius: var(--border-radius) 0 0 var(--border-radius);
+}
+
+.btn-group .btn-primary {
+    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+}
+
+.btn-group .btn-outline:hover:not(:disabled) {
+    background: var(--color-primary-light);
+    color: var(--color-primary-dark);
+    border-color: var(--color-primary);
+}
+
 /* Action Bar */
 .action-bar {
     display: flex;

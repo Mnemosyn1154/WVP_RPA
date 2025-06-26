@@ -81,9 +81,21 @@ class TemplateProcessor {
             // 로딩 토스트 제거
             window.Toast.hide(loadingToast);
             
+            // 히스토리 기록
+            if (window.HistoryManager) {
+                window.HistoryManager.recordDocumentGeneration(templateType, filename, true);
+            }
+            
             return true;
         } catch (error) {
             console.error('문서 생성 실패:', error);
+            
+            // 실패 히스토리 기록
+            if (window.HistoryManager) {
+                const templateName = templateConfig ? templateConfig.name : templateType;
+                window.HistoryManager.recordDocumentGeneration(templateType, `${templateName} 생성 실패`, false);
+            }
+            
             throw error;
         }
     }

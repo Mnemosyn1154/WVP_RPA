@@ -76,6 +76,9 @@ class InvestmentDocumentApp {
       // 6. 저장된 데이터 복원
       this.restoreFormData();
       
+      // 7. 미리보기 버튼 초기 상태 설정
+      this.updatePreviewButtonsState();
+      
       // 🎉 로딩 완료
       if (window.LoadingUtils) {
         window.LoadingUtils.completeLoading();
@@ -285,7 +288,8 @@ class InvestmentDocumentApp {
       saveBtn: async () => await this.saveFormData(),
       loadBtn: async () => await this.loadFormData(), 
       clearBtn: async () => await this.clearFormData(),
-      previewBtn: () => this.formGenerator.showPreview(),
+      previewTermSheetBtn: () => this.previewDocument('termsheet'),
+      previewPreliminaryBtn: () => this.previewDocument('preliminary'),
       generateTermSheetBtn: () => this.generateDocument('termsheet'),
       generatePreliminaryBtn: () => this.generateDocument('preliminary'),
       generateAllBtn: () => this.generateAllDocuments()
@@ -392,6 +396,9 @@ class InvestmentDocumentApp {
   handleNavAction(action) {
     try {
       switch (action) {
+        case 'history':
+          this.showHistoryModal();
+          break;
         case 'help':
           this.showHelpModal();
           break;
@@ -407,9 +414,35 @@ class InvestmentDocumentApp {
   }
 
   /**
+   * 히스토리 모달 표시
+   */
+  showHistoryModal() {
+    if (window.HistoryModal) {
+      window.HistoryModal.show();
+    } else {
+      console.error('HistoryModal을 찾을 수 없습니다.');
+      this.showToast('히스토리 기능을 사용할 수 없습니다.', 'error');
+    }
+  }
+
+  /**
    * 도움말 모달 표시
    */
   showHelpModal() {
+    // UserGuide 컴포넌트가 로드되었는지 확인
+    if (window.UserGuide) {
+      window.UserGuide.show();
+    } else {
+      // UserGuide가 아직 로드되지 않은 경우 기본 도움말 표시
+      console.warn('UserGuide 컴포넌트가 아직 로드되지 않았습니다.');
+      this.showBasicHelp();
+    }
+  }
+
+  /**
+   * 기본 도움말 표시 (UserGuide 로드 실패 시 대체)
+   */
+  showBasicHelp() {
     const helpContent = `
       <div class="help-modal-content">
         <h3 style="margin-bottom: 20px; color: var(--primary-color);">💼 투자문서 생성기 사용법</h3>
@@ -425,49 +458,8 @@ class InvestmentDocumentApp {
         </div>
 
         <div class="help-section">
-          <h4>📄 문서 유형</h4>
-          <ul>
-            <li><strong>Term Sheet</strong>: 간결형 (14개 필수 필드)</li>
-            <li><strong>예비투심위 보고서</strong>: 완전형 (20개 필수 필드)</li>
-          </ul>
-        </div>
-
-        <div class="help-section">
           <h4>⌨️ 키보드 단축키</h4>
-          <div class="shortcut-grid">
-            <div class="shortcut-item">
-              <kbd>Ctrl + S</kbd>
-              <span>Excel로 저장</span>
-            </div>
-            <div class="shortcut-item">
-              <kbd>Ctrl + Shift + O</kbd>
-              <span>Excel에서 열기</span>
-            </div>
-            <div class="shortcut-item">
-              <kbd>Ctrl + Enter</kbd>
-              <span>모든 문서 생성</span>
-            </div>
-            <div class="shortcut-item">
-              <kbd>Ctrl + 1</kbd>
-              <span>Term Sheet 생성</span>
-            </div>
-            <div class="shortcut-item">
-              <kbd>Ctrl + 2</kbd>
-              <span>예비투심위 생성</span>
-            </div>
-            <div class="shortcut-item">
-              <kbd>Ctrl + Delete</kbd>
-              <span>데이터 초기화</span>
-            </div>
-            <div class="shortcut-item">
-              <kbd>Enter</kbd>
-              <span>모든 문서 생성 (입력 필드 외)</span>
-            </div>
-            <div class="shortcut-item">
-              <kbd>Escape</kbd>
-              <span>모달 닫기</span>
-            </div>
-          </div>
+          <p>Ctrl+S: 저장, Ctrl+Enter: 모든 문서 생성, Escape: 모달 닫기</p>
         </div>
 
         <div class="help-section">
@@ -476,17 +468,6 @@ class InvestmentDocumentApp {
             <li>화폐 단위는 우측 상단에서 변경할 수 있습니다</li>
             <li>데이터는 자동으로 저장되며, Excel 파일로 백업할 수 있습니다</li>
             <li>필수 필드가 부족하면 문서 생성 시 안내됩니다</li>
-            <li>각 필드의 설명은 라벨을 참고하여 입력하세요</li>
-          </ul>
-        </div>
-
-        <div class="help-section">
-          <h4>🔧 문제 해결</h4>
-          <ul>
-            <li><strong>문서 생성 실패</strong>: 필수 필드를 모두 입력했는지 확인하세요</li>
-            <li><strong>파일 저장 안됨</strong>: 브라우저 다운로드 권한을 확인하세요</li>
-            <li><strong>계산 오류</strong>: 숫자 형식이 올바른지 확인하세요</li>
-            <li><strong>화면 깨짐</strong>: 브라우저를 새로고침하세요</li>
           </ul>
         </div>
       </div>
@@ -495,7 +476,7 @@ class InvestmentDocumentApp {
     window.Modal.show({
       title: '📚 도움말',
       content: helpContent,
-      size: 'large',
+      size: 'medium',
       closable: true
     });
   }
@@ -579,6 +560,9 @@ class InvestmentDocumentApp {
       this.formData = { ...this.formData, ...data };
       this.saveFormData();
       
+      // 미리보기 버튼 활성화 상태 업데이트
+      this.updatePreviewButtonsState();
+      
     } catch (error) {
       console.error('폼 데이터 변경 처리 실패:', error);
     }
@@ -617,10 +601,21 @@ class InvestmentDocumentApp {
       // FileManager를 통해 Excel 파일로 저장
       const filename = await window.FileManager.saveToExcel(currentFormData);
       
+      // 히스토리 기록
+      if (window.HistoryManager) {
+        window.HistoryManager.recordExcelSave(filename, true);
+      }
+      
       this.showToast(`'${filename}' 파일로 저장되었습니다.`, 'success');
       
     } catch (error) {
       console.error('Excel 파일 저장 실패:', error);
+      
+      // 실패 히스토리 기록
+      if (window.HistoryManager) {
+        window.HistoryManager.recordExcelSave('저장 실패', false);
+      }
+      
       this.showToast(`파일 저장에 실패했습니다: ${error.message}`, 'error');
     }
   }
@@ -656,6 +651,12 @@ class InvestmentDocumentApp {
       if (confirmed) {
         this.formData = {};
         this.formGenerator.clearForm();
+        
+        // 히스토리 기록
+        if (window.HistoryManager) {
+          window.HistoryManager.recordDataClear();
+        }
+        
         this.showToast('데이터가 초기화되었습니다.', 'info');
       }
       
@@ -667,16 +668,31 @@ class InvestmentDocumentApp {
 
   /**
    * 문서 미리보기
+   * @param {string} documentType - 문서 타입 ('termsheet' 또는 'preliminary')
    */
-  previewDocuments() {
+  async previewDocument(documentType) {
     try {
-      // 미리보기 모달 표시
-      const previewData = this.preparePreviewData();
-      // Modal 컴포넌트를 사용하여 미리보기 표시
-      // 구현 예정
+      // 실시간으로 폼 데이터 수집
+      const currentFormData = this.formGenerator.getAllFieldValues();
       
-      console.log('문서 미리보기:', previewData);
-      this.showToast('미리보기 기능은 곧 제공됩니다.', 'info');
+      // 기본 데이터 존재 여부 체크
+      if (!currentFormData || Object.keys(currentFormData).length === 0) {
+        this.showToast('입력된 데이터가 없습니다. 폼을 작성해주세요.', 'warning');
+        return;
+      }
+      
+      // DocumentPreview 컴포넌트를 사용하여 미리보기 표시
+      if (window.DocumentPreview) {
+        await window.DocumentPreview.showPreview(documentType, currentFormData);
+        
+        // 히스토리 기록
+        if (window.HistoryManager) {
+          window.HistoryManager.recordPreview(documentType);
+        }
+      } else {
+        console.error('DocumentPreview 컴포넌트를 찾을 수 없습니다.');
+        this.showToast('미리보기 기능을 사용할 수 없습니다.', 'error');
+      }
       
     } catch (error) {
       console.error('문서 미리보기 실패:', error);
@@ -773,10 +789,18 @@ class InvestmentDocumentApp {
       
       // 결과 안내
       if (successCount === 2) {
+        // 전체 문서 생성 성공 히스토리 기록
+        if (window.HistoryManager) {
+          window.HistoryManager.recordDocumentGeneration('all', '전체 문서', true);
+        }
         this.showToast('모든 문서가 성공적으로 생성되었습니다! 🎉', 'success');
       } else if (successCount === 1) {
         this.showToast(`${successCount}개 문서가 생성되었습니다. (실패: ${failCount}개)`, 'warning');
       } else {
+        // 전체 실패 히스토리 기록
+        if (window.HistoryManager) {
+          window.HistoryManager.recordDocumentGeneration('all', '전체 문서 생성 실패', false);
+        }
         this.showToast('문서 생성에 실패했습니다. 필수 필드를 확인해주세요.', 'error');
       }
       
@@ -868,6 +892,41 @@ class InvestmentDocumentApp {
   // downloadDocument 메서드 제거됨 - TemplateProcessor에서 처리
 
   // generateFilename 메서드 제거됨 - TemplateProcessor에서 처리
+
+  /**
+   * 미리보기 버튼 활성화 상태 업데이트
+   */
+  updatePreviewButtonsState() {
+    try {
+      // 현재 폼 데이터 수집
+      const currentFormData = this.formGenerator?.getAllFieldValues() || {};
+      
+      // 최소 필수 필드 체크 (투자대상이 있으면 미리보기 가능)
+      const hasMinimumData = currentFormData['투자대상'] && 
+                            currentFormData['투자대상'].trim() !== '';
+      
+      // Term Sheet 미리보기 버튼
+      const termSheetPreviewBtn = document.getElementById('previewTermSheetBtn');
+      if (termSheetPreviewBtn) {
+        termSheetPreviewBtn.disabled = !hasMinimumData;
+        termSheetPreviewBtn.title = hasMinimumData ? 
+          'Term Sheet 미리보기' : 
+          '최소한 투자대상을 입력해주세요';
+      }
+      
+      // 예비투심위 미리보기 버튼
+      const preliminaryPreviewBtn = document.getElementById('previewPreliminaryBtn');
+      if (preliminaryPreviewBtn) {
+        preliminaryPreviewBtn.disabled = !hasMinimumData;
+        preliminaryPreviewBtn.title = hasMinimumData ? 
+          '예비투심위 미리보기' : 
+          '최소한 투자대상을 입력해주세요';
+      }
+      
+    } catch (error) {
+      console.error('미리보기 버튼 상태 업데이트 실패:', error);
+    }
+  }
 
   /**
    * 토스트 메시지 표시

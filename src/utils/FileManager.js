@@ -111,6 +111,12 @@ class FileManager {
             // 백업 생성
             this.createBackup(formData, file.name);
 
+            // 성공 히스토리 기록
+            const loadedFieldsCount = Object.keys(formData).length;
+            if (window.HistoryManager) {
+                window.HistoryManager.recordExcelLoad(file.name, true, loadedFieldsCount);
+            }
+
             // 성공 메시지
             if (window.Toast) {
                 window.Toast.success(`'${file.name}' 파일을 성공적으로 불러왔습니다.`);
@@ -120,6 +126,12 @@ class FileManager {
 
         } catch (error) {
             console.error('❌ 파일 처리 실패:', error);
+            
+            // 실패 히스토리 기록
+            if (window.HistoryManager) {
+                const fileName = file ? file.name : '알 수 없는 파일';
+                window.HistoryManager.recordExcelLoad(fileName, false, 0);
+            }
             
             if (window.Toast) {
                 window.Toast.error(error.message);
