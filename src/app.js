@@ -53,6 +53,11 @@ class InvestmentDocumentApp {
         window.LoadingUtils.startMainLoading(3000);
       }
       
+      // DOM 캐시 워밍업
+      if (window.DOMCache) {
+        window.DOMCache.warmUp();
+      }
+      
       // 1. 브라우저 지원 확인
       this.checkBrowserSupport();
       await InvestmentHelpers.delay(400); // 로딩 애니메이션을 위한 대기
@@ -269,7 +274,8 @@ class InvestmentDocumentApp {
         this.createEmergencyBackup();
       });
       
-      window.addEventListener('resize', InvestmentHelpers.debounce(() => {
+      // 리사이즈 이벤트 최적화 (쓰로틀링 사용)
+      window.addEventListener('resize', InvestmentHelpers.throttle(() => {
         this.handleResize();
       }, 250));
       
@@ -281,37 +287,51 @@ class InvestmentDocumentApp {
   }
 
   /**
-   * 버튼 이벤트 리스너 등록
+   * 버튼 이벤트 리스너 등록 (이벤트 위임 방식)
    */
   attachButtonListeners() {
-    const buttons = {
-      saveBtn: async () => await this.saveFormData(),
-      loadBtn: async () => await this.loadFormData(), 
-      clearBtn: async () => await this.clearFormData(),
-      previewTermSheetBtn: () => this.previewDocument('termsheet'),
-      previewPreliminaryBtn: () => this.previewDocument('preliminary'),
-      generateTermSheetBtn: () => this.generateDocument('termsheet'),
-      generatePreliminaryBtn: () => this.generateDocument('preliminary'),
-      generateAllBtn: () => this.generateAllDocuments()
-    };
-    
-    Object.entries(buttons).forEach(([id, handler]) => {
-      const element = document.getElementById(id);
-      if (element) {
-        // 기존 이벤트 리스너 제거 (중복 방지)
-        element.removeEventListener('click', handler);
-        element.addEventListener('click', handler);
-      }
-    });
-
-    // 네비게이션 버튼들 (data-action 속성 사용)
-    const navButtons = document.querySelectorAll('.nav-button[data-action]');
-    navButtons.forEach(button => {
-      button.addEventListener('click', (event) => {
-        const action = event.target.getAttribute('data-action');
-        this.handleNavAction(action);
+    // 액션 바 이벤트 위임
+    const actionBar = window.DOMCache ? 
+      window.DOMCache.getElementById('actionBar') : 
+      document.getElementById('actionBar');
+      
+    if (actionBar) {
+      // 이벤트 위임을 통한 효율적인 이벤트 처리
+      actionBar.addEventListener('click', async (event) => {
+        const button = event.target.closest('button');
+        if (!button) return;
+        
+        // 버튼 ID로 액션 매핑
+        const actions = {
+          saveBtn: () => this.saveFormData(),
+          loadBtn: () => this.loadFormData(),
+          clearBtn: () => this.clearFormData(),
+          previewTermSheetBtn: () => this.previewDocument('termsheet'),
+          previewPreliminaryBtn: () => this.previewDocument('preliminary'),
+          generateTermSheetBtn: () => this.generateDocument('termsheet'),
+          generatePreliminaryBtn: () => this.generateDocument('preliminary'),
+          generateAllBtn: () => this.generateAllDocuments()
+        };
+        
+        const action = actions[button.id];
+        if (action) {
+          event.preventDefault();
+          await action();
+        }
       });
-    });
+    }
+
+    // 헤더 네비게이션 이벤트 위임
+    const header = document.querySelector('.header');
+    if (header) {
+      header.addEventListener('click', (event) => {
+        const navButton = event.target.closest('.nav-button[data-action]');
+        if (navButton) {
+          const action = navButton.getAttribute('data-action');
+          this.handleNavAction(action);
+        }
+      });
+    }
   }
 
   /**
@@ -552,16 +572,28 @@ class InvestmentDocumentApp {
   }
 
   /**
-   * 폼 데이터 변경 처리
+   * 폼 데이터 변경 처리 (디바운싱 적용)
    * @param {Object} data - 변경된 데이터
    */
   handleFormDataChange(data) {
     try {
       this.formData = { ...this.formData, ...data };
-      this.saveFormData();
       
-      // 미리보기 버튼 활성화 상태 업데이트
-      this.updatePreviewButtonsState();
+      // 디바운싱된 자동 저장
+      if (!this.debouncedSave) {
+        this.debouncedSave = InvestmentHelpers.debounce(() => {
+          this.saveFormData();
+        }, 1000); // 1초 디바운싱
+      }
+      this.debouncedSave();
+      
+      // 미리보기 버튼 상태 업데이트 (쓰로틀링)
+      if (!this.throttledUpdatePreview) {
+        this.throttledUpdatePreview = InvestmentHelpers.throttle(() => {
+          this.updatePreviewButtonsState();
+        }, 300); // 300ms 쓰로틀링
+      }
+      this.throttledUpdatePreview();
       
     } catch (error) {
       console.error('폼 데이터 변경 처리 실패:', error);
@@ -894,7 +926,7 @@ class InvestmentDocumentApp {
   // generateFilename 메서드 제거됨 - TemplateProcessor에서 처리
 
   /**
-   * 미리보기 버튼 활성화 상태 업데이트
+   * 미리보기 버튼 활성화 상태 업데이트 (DOM 캐싱 활용)
    */
   updatePreviewButtonsState() {
     try {
@@ -905,8 +937,11 @@ class InvestmentDocumentApp {
       const hasMinimumData = currentFormData['투자대상'] && 
                             currentFormData['투자대상'].trim() !== '';
       
+      // DOM 캐시 활용
+      const cache = window.DOMCache || { getElementById: (id) => document.getElementById(id) };
+      
       // Term Sheet 미리보기 버튼
-      const termSheetPreviewBtn = document.getElementById('previewTermSheetBtn');
+      const termSheetPreviewBtn = cache.getElementById('previewTermSheetBtn');
       if (termSheetPreviewBtn) {
         termSheetPreviewBtn.disabled = !hasMinimumData;
         termSheetPreviewBtn.title = hasMinimumData ? 
@@ -915,7 +950,7 @@ class InvestmentDocumentApp {
       }
       
       // 예비투심위 미리보기 버튼
-      const preliminaryPreviewBtn = document.getElementById('previewPreliminaryBtn');
+      const preliminaryPreviewBtn = cache.getElementById('previewPreliminaryBtn');
       if (preliminaryPreviewBtn) {
         preliminaryPreviewBtn.disabled = !hasMinimumData;
         preliminaryPreviewBtn.title = hasMinimumData ? 

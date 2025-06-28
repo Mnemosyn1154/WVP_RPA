@@ -27,6 +27,21 @@ class FormGenerator {
         this.changeHistory = [];     // 변경 이력
         this.maxHistorySize = 50;    // 맥스 이력 사이즈
         
+        // 성능 최적화: requestAnimationFrame을 위한 플래그
+        this.progressUpdatePending = false;
+        this.progressUpdateFrame = null;
+        
+        // DOM 요소 캐시
+        this.domElements = {
+            progressFill: null,
+            progressText: null,
+            statusText: null
+        };
+        
+        // 가시성 필드 캐시
+        this.visibleFieldsCache = null;
+        this.visibleFieldsCacheTimeout = null;
+        
         // 자동 초기화 제거 - 명시적으로 init() 호출 필요
         console.log('🔧 FormGenerator 인스턴스 생성됨 (초기화 대기 중...)');
     }
@@ -477,49 +492,74 @@ class FormGenerator {
     }
 
     updateProgress() {
-        const allData = this.getAllFieldValues();
-        const visibleFields = this.getVisibleFields();
-        const filledFields = Object.entries(allData).filter(([key, value]) => 
-            visibleFields.includes(key) && value !== null && value !== undefined && value !== ''
-        ).length;
+        // 이미 업데이트가 예약되어 있으면 스킵
+        if (this.progressUpdatePending) return;
         
-        const progress = visibleFields.length > 0 ? (filledFields / visibleFields.length) * 100 : 0;
+        this.progressUpdatePending = true;
         
-        // 상태 업데이트
-        this.formState.completionRate = progress;
-        
-        // 진행률 바 업데이트
-        const progressFill = document.getElementById('progressFill');
-        const progressText = document.getElementById('progressText');
-        const statusText = document.getElementById('statusText');
-        
-        if (progressFill) {
-            progressFill.style.width = `${progress}%`;
-        }
-        
-        if (progressText) {
-            progressText.textContent = `${Math.round(progress)}% 완료 (${filledFields}/${visibleFields.length})`;
-        }
-        
-        if (statusText) {
-            const validationSummary = this.getValidationSummary();
+        // requestAnimationFrame을 사용하여 DOM 업데이트 배치 처리
+        this.progressUpdateFrame = requestAnimationFrame(() => {
+            const allData = this.getAllFieldValues();
+            const visibleFields = this.getVisibleFields();
+            const filledFields = Object.entries(allData).filter(([key, value]) => 
+                visibleFields.includes(key) && value !== null && value !== undefined && value !== ''
+            ).length;
             
-            if (progress === 100) {
-                if (validationSummary.hasErrors) {
-                    statusText.textContent = `입력 완료, 하지만 ${validationSummary.errorCount}개 오류가 있습니다.`;
-                } else {
-                    statusText.textContent = '입력 완료! 문서를 생성할 수 있습니다.';
-                }
-            } else if (progress > 75) {
-                statusText.textContent = '거의 완료되었습니다.';
-            } else if (progress > 50) {
-                statusText.textContent = '입력이 진행 중입니다.';
-            } else if (progress > 25) {
-                statusText.textContent = '좋은 시작입니다. 계속해주세요.';
-            } else {
-                statusText.textContent = '입력을 시작해주세요.';
+            const progress = visibleFields.length > 0 ? (filledFields / visibleFields.length) * 100 : 0;
+            
+            // 상태 업데이트
+            this.formState.completionRate = progress;
+            
+            // DOM 요소 가져오기 (DOMCache 활용)
+            if (!this.domElements.progressFill) {
+                this.domElements.progressFill = window.DOMCache ? 
+                    window.DOMCache.getElementById('progressFill') : 
+                    document.getElementById('progressFill');
             }
-        }
+            if (!this.domElements.progressText) {
+                this.domElements.progressText = window.DOMCache ? 
+                    window.DOMCache.getElementById('progressText') : 
+                    document.getElementById('progressText');
+            }
+            if (!this.domElements.statusText) {
+                this.domElements.statusText = window.DOMCache ? 
+                    window.DOMCache.getElementById('statusText') : 
+                    document.getElementById('statusText');
+            }
+            
+            const { progressFill, progressText, statusText } = this.domElements;
+            
+            // 배치 DOM 업데이트
+            if (progressFill) {
+                progressFill.style.width = `${progress}%`;
+            }
+            
+            if (progressText) {
+                progressText.textContent = `${Math.round(progress)}% 완료 (${filledFields}/${visibleFields.length})`;
+            }
+            
+            if (statusText) {
+                const validationSummary = this.getValidationSummary();
+                
+                if (progress === 100) {
+                    if (validationSummary.hasErrors) {
+                        statusText.textContent = `입력 완료, 하지만 ${validationSummary.errorCount}개 오류가 있습니다.`;
+                    } else {
+                        statusText.textContent = '입력 완료! 문서를 생성할 수 있습니다.';
+                    }
+                } else if (progress > 75) {
+                    statusText.textContent = '거의 완료되었습니다.';
+                } else if (progress > 50) {
+                    statusText.textContent = '입력이 진행 중입니다.';
+                } else if (progress > 25) {
+                    statusText.textContent = '좋은 시작입니다. 계속해주세요.';
+                } else {
+                    statusText.textContent = '입력을 시작해주세요.';
+                }
+            }
+            
+            this.progressUpdatePending = false;
+        });
     }
 
     setupEventListeners() {
@@ -605,14 +645,32 @@ class FormGenerator {
     }
     
     getVisibleFields() {
+        // 캐시가 유효하면 캐시된 값 반환
+        if (this.visibleFieldsCache !== null) {
+            return this.visibleFieldsCache;
+        }
+        
         const visibleFields = [];
         
+        // DOMCache 사용하여 필드 요소 찾기
         for (const [fieldKey, fieldId] of this.fields.entries()) {
-            const fieldElement = document.querySelector(`[data-field-id="${fieldId}"]`);
+            const fieldElement = window.DOMCache ? 
+                window.DOMCache.querySelector(`[data-field-id="${fieldId}"]`) :
+                document.querySelector(`[data-field-id="${fieldId}"]`);
+                
             if (fieldElement && fieldElement.style.display !== 'none' && !fieldElement.getAttribute('aria-hidden')) {
                 visibleFields.push(fieldKey);
             }
         }
+        
+        // 캐시 저장 및 자동 무효화 설정 (100ms 후)
+        this.visibleFieldsCache = visibleFields;
+        if (this.visibleFieldsCacheTimeout) {
+            clearTimeout(this.visibleFieldsCacheTimeout);
+        }
+        this.visibleFieldsCacheTimeout = setTimeout(() => {
+            this.visibleFieldsCache = null;
+        }, 100);
         
         return visibleFields;
     }
@@ -960,24 +1018,49 @@ class FormGenerator {
     }
     
     setupInputHints() {
-        // 실시간 입력 가이드
-        document.addEventListener('input', (e) => {
-            if (e.target.matches('input, textarea')) {
-                this.showInputHint(e.target);
-            }
-        });
+        // 디바운스된 힌트 표시 함수 생성
+        if (!this.debouncedShowInputHint) {
+            this.debouncedShowInputHint = window.InvestmentHelpers?.debounce((target) => {
+                this.showInputHint(target);
+            }, 150) || ((target) => this.showInputHint(target));
+        }
         
-        document.addEventListener('focus', (e) => {
+        // 이벤트 위임을 사용하여 formContainer에 한 번만 등록
+        const container = this.formContainer || document.getElementById('formContainer');
+        if (!container) return;
+        
+        // 기존 리스너 제거 (중복 방지)
+        if (this.inputHintHandler) {
+            container.removeEventListener('input', this.inputHintHandler);
+            container.removeEventListener('focusin', this.focusHandler);
+            container.removeEventListener('focusout', this.blurHandler);
+        }
+        
+        // 입력 이벤트 핸들러
+        this.inputHintHandler = (e) => {
+            if (e.target.matches('input, textarea')) {
+                this.debouncedShowInputHint(e.target);
+            }
+        };
+        
+        // 포커스 이벤트 핸들러
+        this.focusHandler = (e) => {
             if (e.target.matches('input, textarea, select')) {
                 this.showFieldGuidance(e.target);
             }
-        });
+        };
         
-        document.addEventListener('blur', (e) => {
+        // 블러 이벤트 핸들러
+        this.blurHandler = (e) => {
             if (e.target.matches('input, textarea, select')) {
                 this.hideFieldGuidance(e.target);
             }
-        });
+        };
+        
+        // 이벤트 위임으로 한 번만 등록
+        container.addEventListener('input', this.inputHintHandler);
+        container.addEventListener('focusin', this.focusHandler);
+        container.addEventListener('focusout', this.blurHandler);
     }
     
     showInputHint(inputElement) {
@@ -1165,14 +1248,30 @@ class FormGenerator {
             '디지털벤처스(주)', '스마트솔루션(주)'
         ];
         
-        document.addEventListener('input', (e) => {
-            const fieldContainer = e.target.closest('.form-field');
-            const fieldName = fieldContainer?.getAttribute('data-field-name');
+        // 디바운스된 자동완성 함수 생성
+        if (!this.debouncedAutoComplete) {
+            this.debouncedAutoComplete = window.InvestmentHelpers?.debounce((target, data, value) => {
+                this.showAutoComplete(target, data, value);
+            }, 200) || ((target, data, value) => this.showAutoComplete(target, data, value));
+        }
+        
+        // 이벤트 위임을 사용하여 formContainer에 이미 등록된 input 핸들러를 확장
+        if (!this.autoCompleteHandler) {
+            this.autoCompleteHandler = (e) => {
+                const fieldContainer = e.target.closest('.form-field');
+                const fieldName = fieldContainer?.getAttribute('data-field-name');
+                
+                if (fieldName === '투자대상' && e.target.value.length > 1) {
+                    this.debouncedAutoComplete(e.target, companyData, e.target.value);
+                }
+            };
             
-            if (fieldName === '투자대상' && e.target.value.length > 1) {
-                this.showAutoComplete(e.target, companyData, e.target.value);
+            // formContainer에 이벤트 위임으로 등록
+            const container = this.formContainer || document.getElementById('formContainer');
+            if (container) {
+                container.addEventListener('input', this.autoCompleteHandler);
             }
-        });
+        }
     }
     
     showAutoComplete(input, suggestions, query) {
@@ -1405,7 +1504,10 @@ class FormGenerator {
     }
     
     toggleFieldVisibility(fieldKey, fieldId, shouldShow) {
-        const fieldElement = document.querySelector(`[data-field-id="${fieldId}"]`);
+        const fieldElement = window.DOMCache ? 
+            window.DOMCache.querySelector(`[data-field-id="${fieldId}"]`) :
+            document.querySelector(`[data-field-id="${fieldId}"]`);
+            
         if (fieldElement) {
             if (shouldShow) {
                 fieldElement.style.display = '';
@@ -1415,6 +1517,9 @@ class FormGenerator {
                 fieldElement.setAttribute('aria-hidden', 'true');
                 // 숨겨진 필드의 값은 초기화하지 않음 (사용자가 다시 조건을 만족시킬 경우를 대비)
             }
+            
+            // 가시성 캐시 무효화
+            this.visibleFieldsCache = null;
         }
     }
     
@@ -1614,6 +1719,54 @@ class FormGenerator {
             statusElement.textContent = statusText;
             statusElement.className = className;
         }
+    }
+    
+    /**
+     * 컴포넌트 정리 (메모리 누수 방지)
+     */
+    cleanup() {
+        // 이벤트 리스너 제거
+        const container = this.formContainer || document.getElementById('formContainer');
+        if (container) {
+            if (this.inputHintHandler) {
+                container.removeEventListener('input', this.inputHintHandler);
+                container.removeEventListener('focusin', this.focusHandler);
+                container.removeEventListener('focusout', this.blurHandler);
+            }
+            if (this.autoCompleteHandler) {
+                container.removeEventListener('input', this.autoCompleteHandler);
+            }
+        }
+        
+        // requestAnimationFrame 취소
+        if (this.progressUpdateFrame) {
+            cancelAnimationFrame(this.progressUpdateFrame);
+        }
+        
+        // 타이머 정리
+        if (this.visibleFieldsCacheTimeout) {
+            clearTimeout(this.visibleFieldsCacheTimeout);
+        }
+        if (this.autoSaveTimer) {
+            clearInterval(this.autoSaveTimer);
+        }
+        
+        // 캐시 초기화
+        this.visibleFieldsCache = null;
+        this.domElements = {
+            progressFill: null,
+            progressText: null,
+            statusText: null
+        };
+        
+        // 참조 정리
+        this.sections.clear();
+        this.fields.clear();
+        this.formState.fieldStates.clear();
+        this.formState.validationErrors.clear();
+        this.changeHistory = [];
+        
+        console.log('🧹 FormGenerator 정리 완료');
     }
 }
 

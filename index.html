@@ -6,7 +6,74 @@
     <title>투자문서 생성기 - VC Term Sheet & 예비투심위 자동화</title>
     <meta name="description" content="VC 투자 업무의 Term Sheet와 예비투심위 보고서를 자동 생성하는 웹 애플리케이션">
     
-    <!-- CSS Files -->
+    <!-- Critical CSS (인라인으로 포함) -->
+    <style>
+        /* 초기 로딩 시 필수 스타일 */
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+            --bg-color: #f9fafb;
+            --text-color: #1f2937;
+            --border-color: #e5e7eb;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        /* 로딩 스피너 필수 스타일 */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.98);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        .spinner {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin-bottom: 30px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .spinner-icons {
+            animation: spin 3s linear infinite;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    
+    <!-- CSS Files (비동기 로딩) -->
+    <link rel="preload" href="src/assets/styles/variables.css" as="style">
+    <link rel="preload" href="src/assets/styles/reset.css" as="style">
+    <link rel="preload" href="src/assets/styles/layout.css" as="style">
+    <link rel="preload" href="src/assets/styles/components.css" as="style">
+    <link rel="preload" href="src/assets/styles/responsive.css" as="style">
+    
     <link rel="stylesheet" href="src/assets/styles/variables.css">
     <link rel="stylesheet" href="src/assets/styles/reset.css">
     <link rel="stylesheet" href="src/assets/styles/layout.css">
@@ -16,13 +83,13 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💼</text></svg>">
     
-    <!-- 외부 라이브러리 -->
-    <script src="https://unpkg.com/pizzip@3.1.6/dist/pizzip.js"></script>
-    <script src="https://unpkg.com/docxtemplater@3.44.0/build/docxtemplater.js"></script>
-    <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <!-- 외부 라이브러리 (비동기 로딩) -->
+    <script defer src="https://unpkg.com/pizzip@3.1.6/dist/pizzip.js"></script>
+    <script defer src="https://unpkg.com/docxtemplater@3.44.0/build/docxtemplater.js"></script>
+    <script defer src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
     
-    <!-- xlsx-js-style (SheetJS + 스타일링 지원) -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <!-- xlsx-js-style (SheetJS + 스타일링 지원) - 지연 로딩 -->
+    <script defer src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 </head>
 <body>
     <!-- Header -->
@@ -152,29 +219,39 @@
     <!-- 파일 업로드용 숨겨진 Input -->
     <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none;">
 
-    <!-- Scripts -->
-    <script src="src/utils/helpers.js"></script>
-    <script src="src/utils/storage.js"></script>
-    <script src="src/utils/fileUtils.js"></script>
-    <script src="src/utils/CurrencyManager.js"></script>
-    <script src="src/utils/ExcelProcessor.js"></script>
-    <script src="src/utils/FileManager.js"></script>
-    <script src="src/utils/HistoryManager.js"></script>
+    <!-- Scripts (순차적 로딩을 위한 defer 사용) -->
+    <!-- 핵심 유틸리티 (즉시 필요) -->
+    <script defer src="src/utils/helpers.js"></script>
+    <script defer src="src/utils/storage.js"></script>
+    <script defer src="src/utils/LoadingUtils.js"></script>
+    <script defer src="src/utils/DOMCache.js"></script>
     
-    <script src="src/components/Toast.js"></script>
-    <script src="src/components/Modal.js"></script>
-    <script src="src/components/Button.js"></script>
-    <script src="src/components/FormField.js"></script>
-    <script src="src/components/FormSection.js"></script>
-    <script src="src/components/DocumentPreview.js"></script>
-    <script src="src/components/HistoryModal.js"></script>
-    <script src="src/components/UserGuide.js"></script>
+    <!-- UI 컴포넌트 (초기 렌더링에 필요) -->
+    <script defer src="src/components/Toast.js"></script>
+    <script defer src="src/components/Modal.js"></script>
+    <script defer src="src/components/Button.js"></script>
+    <script defer src="src/components/FormField.js"></script>
+    <script defer src="src/components/FormSection.js"></script>
     
-    <script src="src/core/DataValidator.js"></script>
-    <script src="src/core/CalculationEngine.js"></script>
-    <script src="src/core/FormGenerator.js"></script>
-    <script src="src/core/TemplateProcessor.js"></script>
+    <!-- 핵심 기능 모듈 -->
+    <script defer src="src/core/DataValidator.js"></script>
+    <script defer src="src/core/CalculationEngine.js"></script>
+    <script defer src="src/core/FormGenerator.js"></script>
     
-    <script src="src/app.js"></script>
+    <!-- 파일 처리 (지연 로딩 가능) -->
+    <script defer src="src/utils/fileUtils.js"></script>
+    <script defer src="src/utils/ExcelProcessor.js"></script>
+    <script defer src="src/utils/FileManager.js"></script>
+    <script defer src="src/core/TemplateProcessor.js"></script>
+    
+    <!-- 부가 기능 (나중에 로드) -->
+    <script defer src="src/utils/CurrencyManager.js"></script>
+    <script defer src="src/utils/HistoryManager.js"></script>
+    <script defer src="src/components/DocumentPreview.js"></script>
+    <script defer src="src/components/HistoryModal.js"></script>
+    <script defer src="src/components/UserGuide.js"></script>
+    
+    <!-- 메인 애플리케이션 -->
+    <script defer src="src/app.js"></script>
 </body>
 </html> 

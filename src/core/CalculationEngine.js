@@ -6,6 +6,20 @@
 class CalculationEngine {
     constructor() {
         this.currencyManager = window.CurrencyManager;
+        
+        // 성능 최적화: 계산 결과 캐시
+        this.calculationCache = new Map();
+        this.cacheMaxSize = 100; // 최대 캐시 크기
+        
+        // 의존성 그래프
+        this.dependencyGraph = {
+            '지분율': ['투자금액', '투자후가치'],
+            '인수주식수': ['투자금액', '투자단가']
+        };
+        
+        // 역방향 의존성 (어떤 필드가 변경되면 어떤 계산이 무효화되는지)
+        this.reverseDependencies = this.buildReverseDependencies();
+        
         this.calculationRules = {
             // 지분율 = 투자금액 / 투자후가치 * 100
             '지분율': (data) => {
@@ -32,7 +46,66 @@ class CalculationEngine {
     }
 
     /**
-     * 특정 필드 자동 계산
+     * 역방향 의존성 그래프 구축
+     * @returns {Object} 역방향 의존성 맵
+     */
+    buildReverseDependencies() {
+        const reverseDeps = {};
+        
+        for (const [calcField, deps] of Object.entries(this.dependencyGraph)) {
+            for (const dep of deps) {
+                if (!reverseDeps[dep]) {
+                    reverseDeps[dep] = [];
+                }
+                reverseDeps[dep].push(calcField);
+            }
+        }
+        
+        return reverseDeps;
+    }
+
+    /**
+     * 캐시 키 생성
+     * @param {string} fieldName - 필드명
+     * @param {Object} data - 데이터
+     * @returns {string} 캐시 키
+     */
+    getCacheKey(fieldName, data) {
+        const deps = this.dependencyGraph[fieldName] || [];
+        const values = deps.map(dep => data[dep] || '').join('|');
+        return `${fieldName}:${values}`;
+    }
+
+    /**
+     * 필드 변경 시 영향받는 계산 캐시 무효화
+     * @param {string} changedField - 변경된 필드명
+     */
+    invalidateCache(changedField) {
+        const affectedCalcs = this.reverseDependencies[changedField] || [];
+        
+        // 영향받는 계산들의 캐시 제거
+        for (const [key] of this.calculationCache) {
+            if (affectedCalcs.some(calc => key.startsWith(calc + ':'))) {
+                this.calculationCache.delete(key);
+            }
+        }
+    }
+
+    /**
+     * 캐시 크기 관리
+     */
+    manageCacheSize() {
+        if (this.calculationCache.size > this.cacheMaxSize) {
+            // FIFO 방식으로 오래된 항목 제거
+            const keysToDelete = Array.from(this.calculationCache.keys())
+                .slice(0, Math.floor(this.cacheMaxSize * 0.2)); // 20% 제거
+            
+            keysToDelete.forEach(key => this.calculationCache.delete(key));
+        }
+    }
+
+    /**
+     * 특정 필드 자동 계산 (메모이제이션 적용)
      * @param {string} fieldName - 계산할 필드명
      * @param {Object} data - 전체 데이터
      * @returns {number|null} 계산 결과
@@ -41,9 +114,23 @@ class CalculationEngine {
         const rule = this.calculationRules[fieldName];
         if (!rule) return null;
 
+        // 캐시 확인
+        const cacheKey = this.getCacheKey(fieldName, data);
+        if (this.calculationCache.has(cacheKey)) {
+            return this.calculationCache.get(cacheKey);
+        }
+
         try {
             const result = rule(data);
-            return isNaN(result) ? null : result;
+            const finalResult = isNaN(result) ? null : result;
+            
+            // 결과 캐싱
+            if (finalResult !== null) {
+                this.calculationCache.set(cacheKey, finalResult);
+                this.manageCacheSize();
+            }
+            
+            return finalResult;
         } catch (error) {
             console.error(`계산 오류 (${fieldName}):`, error);
             return null;
@@ -51,14 +138,31 @@ class CalculationEngine {
     }
 
     /**
-     * 모든 자동 계산 필드 업데이트
+     * 모든 자동 계산 필드 업데이트 (스마트 업데이트)
      * @param {Object} data - 전체 데이터
+     * @param {string} changedField - 변경된 필드명 (선택사항)
      * @returns {Object} 업데이트된 데이터
      */
-    calculateAll(data) {
+    calculateAll(data, changedField = null) {
         const updatedData = { ...data };
         
-        for (const fieldName of Object.keys(this.calculationRules)) {
+        // 변경된 필드가 있으면 관련 캐시 무효화
+        if (changedField) {
+            this.invalidateCache(changedField);
+        }
+        
+        // 계산할 필드 결정
+        let fieldsToCalculate;
+        if (changedField && this.reverseDependencies[changedField]) {
+            // 변경된 필드에 의존하는 계산만 수행
+            fieldsToCalculate = this.reverseDependencies[changedField];
+        } else {
+            // 모든 필드 계산
+            fieldsToCalculate = Object.keys(this.calculationRules);
+        }
+        
+        // 필요한 계산만 수행
+        for (const fieldName of fieldsToCalculate) {
             const calculatedValue = this.calculate(fieldName, updatedData);
             if (calculatedValue !== null) {
                 updatedData[fieldName] = calculatedValue;
@@ -91,12 +195,7 @@ class CalculationEngine {
      * @returns {Array<string>} 의존 필드명 배열
      */
     getDependencies(fieldName) {
-        const dependencies = {
-            '지분율': ['투자금액', '투자후가치'],
-            '인수주식수': ['투자금액', '투자단가']
-        };
-        
-        return dependencies[fieldName] || [];
+        return this.dependencyGraph[fieldName] || [];
     }
 
     /**
@@ -226,6 +325,28 @@ class CalculationEngine {
             // 표시 단위를 기본 단위로 변환하여 계산
             const investmentInBaseUnit = investmentInDisplayUnit * currency.multiplier;
             return Math.floor(investmentInBaseUnit / pricePerShare);
+        };
+        
+        // 화폐 변경 시 전체 캐시 초기화
+        this.clearCache();
+    }
+
+    /**
+     * 캐시 초기화
+     */
+    clearCache() {
+        this.calculationCache.clear();
+    }
+
+    /**
+     * 캐시 통계 정보 반환
+     * @returns {Object} 캐시 통계
+     */
+    getCacheStats() {
+        return {
+            size: this.calculationCache.size,
+            maxSize: this.cacheMaxSize,
+            hitRate: this.cacheHits ? (this.cacheHits / (this.cacheHits + this.cacheMisses)) * 100 : 0
         };
     }
 

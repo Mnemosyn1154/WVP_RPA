@@ -7,6 +7,8 @@ class Modal {
     constructor() {
         this.container = null;
         this.activeModals = new Map();
+        this.MAX_MODALS = 5; // 최대 모달 수 제한
+        this.eventHandlers = new WeakMap(); // 이벤트 핸들러 추적
         this.init();
     }
 
@@ -18,6 +20,14 @@ class Modal {
     }
 
     show(options = {}) {
+        // 최대 모달 수 제한 체크
+        if (this.activeModals.size >= this.MAX_MODALS) {
+            // 가장 오래된 모달 자동 제거
+            const oldestModalId = this.activeModals.keys().next().value;
+            this.hide(oldestModalId);
+            console.log(`🔄 최대 모달 수(${this.MAX_MODALS}) 초과로 가장 오래된 모달 제거`);
+        }
+
         const config = {
             title: options.title || '알림',
             content: options.content || '',
@@ -45,6 +55,9 @@ class Modal {
     hide(modalId) {
         const modal = this.activeModals.get(modalId);
         if (!modal) return;
+
+        // 이벤트 핸들러 정리
+        this.cleanupEventHandlers(modal.element);
 
         modal.element.classList.remove('show');
         setTimeout(() => {
@@ -100,25 +113,31 @@ class Modal {
     }
 
     addEventListeners(overlay, id, config) {
+        const handlers = [];
+
         // 닫기 버튼
         const closeBtn = overlay.querySelector('.modal-close');
         if (closeBtn) {
-            closeBtn.addEventListener('click', () => this.hide(id));
+            const closeHandler = () => this.hide(id);
+            closeBtn.addEventListener('click', closeHandler);
+            handlers.push({ element: closeBtn, event: 'click', handler: closeHandler });
         }
 
         // 배경 클릭으로 닫기
         if (config.backdrop) {
-            overlay.addEventListener('click', (e) => {
+            const backdropHandler = (e) => {
                 if (e.target === overlay) {
                     this.hide(id);
                 }
-            });
+            };
+            overlay.addEventListener('click', backdropHandler);
+            handlers.push({ element: overlay, event: 'click', handler: backdropHandler });
         }
 
         // 버튼 이벤트
         const buttons = overlay.querySelectorAll('.modal-footer .btn');
         buttons.forEach(btn => {
-            btn.addEventListener('click', () => {
+            const buttonHandler = () => {
                 const action = btn.getAttribute('data-action');
                 if (action === 'close' || !config.onAction) {
                     this.hide(id);
@@ -128,8 +147,13 @@ class Modal {
                         this.hide(id);
                     }
                 }
-            });
+            };
+            btn.addEventListener('click', buttonHandler);
+            handlers.push({ element: btn, event: 'click', handler: buttonHandler });
         });
+
+        // WeakMap에 핸들러 저장
+        this.eventHandlers.set(overlay, handlers);
     }
 
     generateId() {
@@ -161,6 +185,50 @@ class Modal {
                 onAction: () => resolve()
             });
         });
+    }
+
+    /**
+     * 이벤트 핸들러 정리
+     * @param {HTMLElement} element - 정리할 요소
+     */
+    cleanupEventHandlers(element) {
+        const handlers = this.eventHandlers.get(element);
+        if (handlers) {
+            handlers.forEach(({ element, event, handler }) => {
+                element.removeEventListener(event, handler);
+            });
+            this.eventHandlers.delete(element);
+        }
+    }
+
+    /**
+     * 모든 모달 닫기 및 정리
+     */
+    closeAll() {
+        const modalIds = Array.from(this.activeModals.keys());
+        modalIds.forEach(id => this.hide(id));
+    }
+
+    /**
+     * 컴포넌트 정리 (메모리 누수 방지)
+     */
+    cleanup() {
+        // 모든 모달 닫기
+        this.closeAll();
+        
+        // 참조 정리
+        this.activeModals.clear();
+        this.eventHandlers = new WeakMap();
+        
+        console.log('🧹 Modal 컴포넌트 정리 완료');
+    }
+
+    /**
+     * 활성 모달 수 반환
+     * @returns {number} 활성 모달 수
+     */
+    getActiveCount() {
+        return this.activeModals.size;
     }
 }
 

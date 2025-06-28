@@ -10,6 +10,10 @@ class HistoryManager {
     this.HISTORY_KEY = 'investment_work_history';
     this.MAX_HISTORY_ITEMS = 10;
     this.history = this.loadHistory();
+    
+    // 이벤트 리스너 추적을 위한 WeakMap
+    this.eventListeners = new WeakMap();
+    this.activeListeners = [];
   }
 
   /**
@@ -307,6 +311,63 @@ class HistoryManager {
     });
 
     return stats;
+  }
+
+  /**
+   * 이벤트 리스너 추가 (메모리 누수 방지)
+   * @param {string} eventName - 이벤트 이름
+   * @param {Function} handler - 이벤트 핸들러
+   * @param {EventTarget} target - 이벤트 타겟 (기본값: document)
+   */
+  addEventListener(eventName, handler, target = document) {
+    // 리스너 정보 저장
+    const listenerInfo = { eventName, handler, target };
+    this.activeListeners.push(listenerInfo);
+    
+    // 실제 이벤트 리스너 등록
+    target.addEventListener(eventName, handler);
+    
+    // WeakMap에 매핑 저장
+    if (!this.eventListeners.has(target)) {
+      this.eventListeners.set(target, []);
+    }
+    this.eventListeners.get(target).push(listenerInfo);
+  }
+
+  /**
+   * 모든 이벤트 리스너 제거
+   */
+  removeAllEventListeners() {
+    this.activeListeners.forEach(({ eventName, handler, target }) => {
+      target.removeEventListener(eventName, handler);
+    });
+    this.activeListeners = [];
+  }
+
+  /**
+   * 컴포넌트 정리 (메모리 누수 방지)
+   */
+  cleanup() {
+    // 모든 이벤트 리스너 제거
+    this.removeAllEventListeners();
+    
+    // 히스토리 데이터는 유지하되 참조만 정리
+    this.eventListeners = new WeakMap();
+    
+    console.log('🧹 HistoryManager 정리 완료');
+  }
+
+  /**
+   * 히스토리 크기 최적화
+   * @param {number} maxItems - 최대 아이템 수
+   */
+  optimizeHistorySize(maxItems = null) {
+    const limit = maxItems || this.MAX_HISTORY_ITEMS;
+    if (this.history.length > limit) {
+      this.history = this.history.slice(0, limit);
+      this.saveHistory();
+      console.log(`📊 히스토리 크기 최적화: ${limit}개 항목으로 제한`);
+    }
   }
 }
 

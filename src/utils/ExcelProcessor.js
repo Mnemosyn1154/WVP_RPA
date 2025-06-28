@@ -131,12 +131,15 @@ class ExcelProcessor {
     }
 
     /**
-     * 워크시트 데이터 준비
+     * 워크시트 데이터 준비 (성능 최적화)
      * @param {Object} formData - 폼 데이터
      * @returns {Array<Array>} 2차원 배열 형태의 워크시트 데이터
      */
     prepareWorksheetData(formData) {
-        const data = [];
+        // 성능 최적화: 배열 사전 할당
+        const estimatedRows = Object.keys(this.columnMapping).length + 20; // 예상 행 수
+        const data = new Array(estimatedRows);
+        let rowIndex = 0;
         
         // 현재 화폐 정보 가져오기
         const currentCurrency = window.CurrencyManager ? 
@@ -144,25 +147,26 @@ class ExcelProcessor {
             { code: 'KRW', name: '한국 원' };
         
         // 헤더 섹션
-        data.push(['투자문서 생성기 - 투자조건 데이터 시트']);
-        data.push([`생성일시: ${new Date().toLocaleString('ko-KR')}`, `화폐: ${currentCurrency.code} (${currentCurrency.name})`]);
-        data.push([`프로젝트: ${formData.투자대상 || '미정'}`, `버전: ${this.version}`]);
-        data.push(['='.repeat(50)]); // 구분선
-        data.push([]); // 빈 행
+        data[rowIndex++] = ['투자문서 생성기 - 투자조건 데이터 시트'];
+        data[rowIndex++] = [`생성일시: ${new Date().toLocaleString('ko-KR')}`, `화폐: ${currentCurrency.code} (${currentCurrency.name})`];
+        data[rowIndex++] = [`프로젝트: ${formData.투자대상 || '미정'}`, `버전: ${this.version}`];
+        data[rowIndex++] = ['='.repeat(50)]; // 구분선
+        data[rowIndex++] = []; // 빈 행
         
         // 섹션별 데이터 구성
-        this.addSectionData(data, '회사 기본 정보', ['투자대상', '대표자', '주소', 'Series', '사용용도'], formData);
-        data.push([]); // 빈 행
+        rowIndex = this.addSectionData(data, rowIndex, '회사 기본 정보', ['투자대상', '대표자', '주소', 'Series', '사용용도'], formData);
+        data[rowIndex++] = []; // 빈 행
         
-        this.addSectionData(data, '투자 조건', ['투자금액', '투자재원', '투자방식', '투자단가', '액면가', '투자전가치', '투자후가치', '동반투자자'], formData);
-        data.push([]); // 빈 행
+        rowIndex = this.addSectionData(data, rowIndex, '투자 조건', ['투자금액', '투자재원', '투자방식', '투자단가', '액면가', '투자전가치', '투자후가치', '동반투자자'], formData);
+        data[rowIndex++] = []; // 빈 행
         
-        this.addSectionData(data, '재무 정보', ['인수주식수', '지분율', '상환이자', '잔여분배이자', '주매청이자'], formData);
-        data.push([]); // 빈 행
+        rowIndex = this.addSectionData(data, rowIndex, '재무 정보', ['인수주식수', '지분율', '상환이자', '잔여분배이자', '주매청이자'], formData);
+        data[rowIndex++] = []; // 빈 행
         
-        this.addSectionData(data, '운영 정보', ['배당률', '위약벌', '투자총괄', '담당자1', '담당자2'], formData);
+        rowIndex = this.addSectionData(data, rowIndex, '운영 정보', ['배당률', '위약벌', '투자총괄', '담당자1', '담당자2'], formData);
         
-        return data;
+        // 실제 사용된 크기로 배열 조정
+        return data.slice(0, rowIndex);
     }
 
     /**
@@ -172,12 +176,14 @@ class ExcelProcessor {
      * @param {Array<string>} fieldNames - 해당 섹션의 필드명 배열
      * @param {Object} formData - 폼 데이터
      */
-    addSectionData(data, sectionTitle, fieldNames, formData) {
+    addSectionData(data, rowIndex, sectionTitle, fieldNames, formData) {
         // 섹션 헤더
-        data.push([`📋 ${sectionTitle}`]);
-        data.push(['항목', '값']);
+        data[rowIndex++] = [`📋 ${sectionTitle}`];
+        data[rowIndex++] = ['항목', '값'];
         
-        // 섹션 데이터
+        // 섹션 데이터 (배치 처리)
+        const formattedRows = [];
+        
         fieldNames.forEach(fieldName => {
             if (this.columnMapping[fieldName]) {
                 const displayName = this.columnMapping[fieldName];
@@ -186,9 +192,18 @@ class ExcelProcessor {
                 // 값 포맷팅
                 value = this.formatFieldValue(fieldName, value);
                 
-                data.push([displayName, value]);
+                if (value !== '') {
+                    formattedRows.push([displayName, value]);
+                }
             }
         });
+        
+        // 배치로 데이터 추가
+        formattedRows.forEach(row => {
+            data[rowIndex++] = row;
+        });
+        
+        return rowIndex;
     }
 
     /**
@@ -280,6 +295,9 @@ class ExcelProcessor {
      */
     applyCellColors(worksheet, data) {
         try {
+            // 성능 최적화: 스타일 그룹화를 위한 맵
+            const styleGroups = new Map();
+            
             // 스타일 정의
             const styles = {
                 mainHeader: {
@@ -348,44 +366,62 @@ class ExcelProcessor {
                 }
             };
 
-            // 데이터 행별 스타일 적용
+            // 첫 번째 패스: 행 분류 및 스타일 결정
             data.forEach((row, rowIndex) => {
-                const cellA = worksheet[XLSX.utils.encode_cell({ r: rowIndex, c: 0 })];
-                const cellB = worksheet[XLSX.utils.encode_cell({ r: rowIndex, c: 1 })];
+                let styleKey = '';
+                let cellAStyle = null;
+                let cellBStyle = null;
                 
                 if (rowIndex === 0) {
-                    // 메인 헤더 (A1)
-                    if (cellA) cellA.s = styles.mainHeader;
-                    
+                    styleKey = 'mainHeader';
+                    cellAStyle = styles.mainHeader;
                 } else if (rowIndex === 1 || rowIndex === 2) {
-                    // 정보 헤더 (A2, A3)
-                    if (cellA) cellA.s = styles.infoHeader;
-                    if (cellB) cellB.s = styles.infoHeader;
-                    
+                    styleKey = 'infoHeader';
+                    cellAStyle = styles.infoHeader;
+                    cellBStyle = styles.infoHeader;
                 } else if (rowIndex === 3) {
-                    // 구분선 (A4)
-                    if (cellA) cellA.s = styles.separator;
-                    
+                    styleKey = 'separator';
+                    cellAStyle = styles.separator;
                 } else if (row[0] && row[0].includes('📋')) {
-                    // 섹션 헤더
                     const sectionName = this.getSectionNameFromHeader(row[0]);
-                    const sectionStyle = styles.sectionHeader[sectionName] || styles.sectionHeader.회사기본정보;
-                    if (cellA) cellA.s = sectionStyle;
-                    
+                    styleKey = `section_${sectionName}`;
+                    cellAStyle = styles.sectionHeader[sectionName] || styles.sectionHeader.회사기본정보;
                 } else if (row[0] === '항목' && row[1] === '값') {
-                    // 컬럼 헤더
-                    if (cellA) cellA.s = styles.columnHeader;
-                    if (cellB) cellB.s = styles.columnHeader;
-                    
+                    styleKey = 'columnHeader';
+                    cellAStyle = styles.columnHeader;
+                    cellBStyle = styles.columnHeader;
                 } else if (row[0] && row[1] !== undefined && row[1] !== '') {
-                    // 데이터 셀
                     const fieldName = this.getFieldNameFromDisplay(row[0]);
-                    const cellStyle = this.getCellStyle(fieldName, styles.dataCell);
-                    
-                    if (cellA) cellA.s = { ...styles.dataCell.normal };
-                    if (cellB) cellB.s = cellStyle;
+                    styleKey = `data_${fieldName}`;
+                    cellAStyle = { ...styles.dataCell.normal };
+                    cellBStyle = this.getCellStyle(fieldName, styles.dataCell);
+                }
+                
+                // 스타일 그룹에 추가
+                if (styleKey) {
+                    if (!styleGroups.has(styleKey)) {
+                        styleGroups.set(styleKey, {
+                            cells: [],
+                            cellAStyle,
+                            cellBStyle
+                        });
+                    }
+                    styleGroups.get(styleKey).cells.push({ rowIndex, row });
                 }
             });
+            
+            // 두 번째 패스: 배치 스타일 적용
+            for (const [styleKey, group] of styleGroups) {
+                const { cells, cellAStyle, cellBStyle } = group;
+                
+                cells.forEach(({ rowIndex }) => {
+                    const cellA = worksheet[XLSX.utils.encode_cell({ r: rowIndex, c: 0 })];
+                    const cellB = worksheet[XLSX.utils.encode_cell({ r: rowIndex, c: 1 })];
+                    
+                    if (cellA && cellAStyle) cellA.s = cellAStyle;
+                    if (cellB && cellBStyle) cellB.s = cellBStyle;
+                });
+            }
             
             console.log('🌈 셀 색상 스타일링 적용 완료');
             
