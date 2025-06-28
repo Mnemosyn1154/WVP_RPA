@@ -189,8 +189,7 @@ class FormGenerator {
                 // 이벤트 리스너 실패는 치명적이지 않으므로 계속 진행
             }
             
-            // 초기 조건부 필드 상태 설정
-            this.initializeConditionalFields();
+
             
             // 워크플로우 최적화 기능 초기화
             this.initializeWorkflowOptimization();
@@ -394,34 +393,34 @@ class FormGenerator {
     }
 
     handleFieldChange(fieldKey, value, fieldId) {
-        // 변경 이력 기록
-        this.recordChange(fieldKey, value);
-        
         // 필드 상태 업데이트
         this.updateFieldState(fieldKey, value, fieldId);
         
-        // 투자방식 변경 시 동적 라벨 업데이트
-        if (fieldKey === '투자방식') {
-            this.updateDynamicLabels(value);
-        }
-        
-        // 조건부 필드 표시/숨기기 로직 실행
+        // 조건부 필드 평가
         this.evaluateConditionalFields(fieldKey, value);
         
-        // 자동 계산 실행
+        // 자동 계산 수행
         this.performAutoCalculations(fieldKey, value);
         
-        // 전체 상태 업데이트
+        // 폼 상태 업데이트
         this.updateFormState();
         
         // 진행률 업데이트
         this.updateProgress();
         
-        // 실시간 고급 검증 수행 (디바운스)
-        this.triggerAdvancedValidation();
+        // 변경사항 기록
+        this.recordChange(fieldKey, value);
         
-        // 자동 저장 (설정된 경우)
-        this.autoSave();
+        // 상태 변경 이벤트 발생
+        this.emitStateChange();
+        
+        // 검증 실행 (디바운스됨)
+        if (this.triggerAdvancedValidation) {
+            this.triggerAdvancedValidation();
+        }
+        
+        // 자동저장 기능 비활성화됨
+        // this.autoSave();
     }
 
     performAutoCalculations(changedField, value) {
@@ -568,20 +567,7 @@ class FormGenerator {
         console.log('🎧 이벤트 리스너 설정 완료 (app.js에서 중앙 관리)');
     }
 
-    initializeConditionalFields() {
-        // 초기 로드 시 기본값에 따른 조건부 필드 상태 설정
-        const investmentType = this.getFieldValue('투자방식') || '전환상환우선주'; // 기본값
-        
-        console.log('🔄 초기 조건부 필드 상태 설정:', investmentType);
-        
-        // 투자방식에 따른 동적 라벨 업데이트
-        this.updateDynamicLabels(investmentType);
-        
-        // 조건부 필드 평가
-        this.evaluateConditionalFields('투자방식', investmentType);
-        
-        console.log('✅ 초기 조건부 필드 상태 설정 완료');
-    }
+
     
     // === 새로운 상태 관리 메서드들 ===
     
@@ -827,29 +813,9 @@ class FormGenerator {
      * 검증 상태 UI 생성
      */
     createValidationStatusUI() {
-        // 검증 상태 표시 영역이 이미 있는지 확인
-        if (document.getElementById('validationStatus')) {
-            return;
-        }
-        
-        const actionBar = document.querySelector('.action-bar');
-        if (!actionBar) return;
-        
-        const validationStatus = document.createElement('div');
-        validationStatus.id = 'validationStatus';
-        validationStatus.className = 'validation-status waiting';
-        validationStatus.innerHTML = `
-            <span class="validation-icon">🔍</span>
-            <span class="validation-text">검증 대기 중</span>
-        `;
-        
-        // 자동 저장 상태 옆에 추가
-        const autoSaveStatus = actionBar.querySelector('#autoSaveStatus');
-        if (autoSaveStatus) {
-            actionBar.insertBefore(validationStatus, autoSaveStatus.nextSibling);
-        } else {
-            actionBar.appendChild(validationStatus);
-        }
+        // 검증 상태 UI가 비활성화되었습니다
+        // 더 깔끔한 UX를 위해 하단 상태 표시를 제거했습니다
+        return;
     }
     
     /**
@@ -1046,14 +1012,14 @@ class FormGenerator {
         // 포커스 이벤트 핸들러
         this.focusHandler = (e) => {
             if (e.target.matches('input, textarea, select')) {
-                this.showFieldGuidance(e.target);
+                // 툴팁 제거로 인해 포커스 시 추가 동작 없음
             }
         };
         
         // 블러 이벤트 핸들러
         this.blurHandler = (e) => {
             if (e.target.matches('input, textarea, select')) {
-                this.hideFieldGuidance(e.target);
+                // 툴팁 제거로 인해 블러 시 추가 동작 없음
             }
         };
         
@@ -1111,68 +1077,6 @@ class FormGenerator {
         return hintFn ? hintFn(value) : null;
     }
     
-    showFieldGuidance(inputElement) {
-        const fieldContainer = inputElement.closest('.form-field');
-        const fieldName = fieldContainer?.getAttribute('data-field-name');
-        
-        if (!fieldName) return;
-        
-        const guidance = this.getFieldGuidance(fieldName);
-        if (guidance) {
-            this.showTooltip(inputElement, guidance);
-        }
-    }
-    
-    getFieldGuidance(fieldName) {
-        const guidances = {
-            '투자대상': '회사의 정확한 법인명을 입력하세요 (예: 테크스타트업(주))',
-            '투자금액': '투자하려는 금액을 억원 단위로 입력하세요',
-            '투자방식': '투자 방식에 따라 표시되는 필드가 달라집니다',
-            'Series': '현재 투자 라운드를 선택하세요',
-            '상환이자': '우선주 상환 시 적용할 연이자율입니다',
-            '지분율': '투자금액과 투자후가치를 바탕으로 자동 계산됩니다'
-        };
-        
-        return guidances[fieldName] || null;
-    }
-    
-    showTooltip(element, text) {
-        // 기존 툴팁 제거
-        this.hideAllTooltips();
-        
-        const tooltip = document.createElement('div');
-        tooltip.className = 'field-tooltip';
-        tooltip.textContent = text;
-        
-        const rect = element.getBoundingClientRect();
-        tooltip.style.position = 'fixed';
-        tooltip.style.top = `${rect.bottom + 5}px`;
-        tooltip.style.left = `${rect.left}px`;
-        tooltip.style.zIndex = '1000';
-        
-        document.body.appendChild(tooltip);
-        
-        // 자동 제거
-        setTimeout(() => {
-            if (tooltip.parentNode) {
-                tooltip.parentNode.removeChild(tooltip);
-            }
-        }, 3000);
-    }
-    
-    hideFieldGuidance(inputElement) {
-        this.hideAllTooltips();
-    }
-    
-    hideAllTooltips() {
-        const tooltips = document.querySelectorAll('.field-tooltip');
-        tooltips.forEach(tooltip => {
-            if (tooltip.parentNode) {
-                tooltip.parentNode.removeChild(tooltip);
-            }
-        });
-    }
-    
     setupProgressAnimations() {
         // 진행률 바 애니메이션 개선
         const progressFill = document.getElementById('progressFill');
@@ -1180,24 +1084,19 @@ class FormGenerator {
             progressFill.style.transition = 'width 0.3s ease-in-out';
         }
         
-        // 섹션별 완성도 표시
-        this.addSectionProgress();
+        // 기존에 생성된 섹션별 진행율 요소 제거
+        this.removeSectionProgress();
     }
     
-    addSectionProgress() {
-        for (const [sectionKey, sectionId] of this.sections.entries()) {
-            const sectionElement = document.querySelector(`[data-section-id="${sectionId}"]`);
-            if (sectionElement) {
-                const header = sectionElement.querySelector('.form-section-header');
-                if (header && !header.querySelector('.section-progress')) {
-                    const progressElement = document.createElement('div');
-                    progressElement.className = 'section-progress';
-                    progressElement.innerHTML = '<span class="progress-text">0%</span>';
-                    header.appendChild(progressElement);
-                }
-            }
-        }
+    removeSectionProgress() {
+        // 모든 섹션 헤더에서 진행율 요소 제거
+        const progressElements = document.querySelectorAll('.section-progress');
+        progressElements.forEach(element => {
+            element.remove();
+        });
     }
+    
+
     
     setupKeyboardNavigation() {
         // 섹션 접기/펼치기 키보드 단축키
@@ -1376,8 +1275,7 @@ class FormGenerator {
         // 상태 초기화
         this.resetFormState();
         
-        // 조건부 필드 초기화
-        this.initializeConditionalFields();
+
         
         this.updateProgress();
     }
@@ -1609,118 +1507,6 @@ class FormGenerator {
         }
     }
 
-    autoSave() {
-        // 자동 저장 설정이 활성화된 경우
-        const settings = window.StorageManager.loadSettings();
-        if (settings.autoSave && this.formState.isDirty) {
-            // 이전 타이머 취소
-            clearTimeout(this.autoSaveTimer);
-            
-            // 디바운스 후 자동 저장 실행
-            this.autoSaveTimer = setTimeout(() => {
-                this.performAutoSave();
-            }, settings.autoSaveInterval || 30000);
-            
-            // 상태 표시 업데이트
-            this.updateAutoSaveStatus('대기 중');
-        }
-    }
-    
-    performAutoSave() {
-        try {
-            console.log('💾 자동 저장 시작...');
-            
-            // 상태 표시
-            this.updateAutoSaveStatus('저장 중');
-            
-            // 데이터 수집 및 검증
-            const data = this.getAllFieldValues();
-            const hasData = Object.values(data).some(value => 
-                value !== null && value !== undefined && value !== ''
-            );
-            
-            if (!hasData) {
-                console.log('💾 빈 데이터로 인해 자동 저장 건너뛜');
-                this.updateAutoSaveStatus('대기 중');
-                return;
-            }
-            
-            // 데이터 저장
-            const success = window.StorageManager.save(data);
-            
-            if (success) {
-                console.log('✅ 자동 저장 성공');
-                this.updateAutoSaveStatus('저장됨', new Date());
-                
-                // 성공 토스트 (자동 숨김)
-                if (window.Toast) {
-                    window.Toast.success('자동 저장됨', {
-                        duration: 2000,
-                        position: 'bottom-right'
-                    });
-                }
-            } else {
-                console.error('❌ 자동 저장 실패');
-                this.updateAutoSaveStatus('오류');
-                
-                if (window.Toast) {
-                    window.Toast.error('자동 저장 실패');
-                }
-            }
-            
-        } catch (error) {
-            console.error('❌ 자동 저장 오류:', error);
-            this.updateAutoSaveStatus('오류');
-            
-            if (window.Toast) {
-                window.Toast.error('자동 저장 오류: ' + error.message);
-            }
-        } finally {
-            // 다음 자동 저장 예약
-            this.scheduleNextAutoSave();
-        }
-    }
-    
-    scheduleNextAutoSave() {
-        const settings = window.StorageManager.loadSettings();
-        if (settings.autoSave) {
-            setTimeout(() => {
-                this.updateAutoSaveStatus('대기 중');
-            }, 3000); // 3초 후 상태 리셋
-        }
-    }
-    
-    updateAutoSaveStatus(status, timestamp = null) {
-        const statusElement = document.getElementById('autoSaveStatus');
-        if (statusElement) {
-            let statusText = '';
-            let className = 'auto-save-status';
-            
-            switch (status) {
-                case '대기 중':
-                    statusText = '🔄 자동 저장 대기 중';
-                    className += ' waiting';
-                    break;
-                case '저장 중':
-                    statusText = '💾 저장 중...';
-                    className += ' saving';
-                    break;
-                case '저장됨':
-                    const timeStr = timestamp ? timestamp.toLocaleTimeString() : '';
-                    statusText = `✅ 자동 저장됨 ${timeStr}`;
-                    className += ' saved';
-                    break;
-                case '오류':
-                    statusText = '❌ 자동 저장 실패';
-                    className += ' error';
-                    break;
-            }
-            
-            statusElement.textContent = statusText;
-            statusElement.className = className;
-        }
-    }
-    
     /**
      * 컴포넌트 정리 (메모리 누수 방지)
      */

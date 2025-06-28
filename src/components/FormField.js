@@ -49,11 +49,7 @@ class FormField {
             <div class="form-field-error"></div>
         `;
 
-        // 담당자1 필드인 경우 추가 담당자 버튼 추가
-        if (config.name === '담당자1') {
-            const addButton = this.createAddManagerButton();
-            field.appendChild(addButton);
-        }
+
 
         return field;
     }
@@ -540,87 +536,15 @@ class FormField {
         }
     }
 
-    /**
-     * 담당자 추가 버튼 생성
-     * @returns {HTMLElement} 추가 버튼 요소
-     */
-    createAddManagerButton() {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'add-manager-btn';
-        button.innerHTML = '+ 담당자 추가';
-        button.title = '추가 담당자를 입력할 수 있습니다';
-        
-        button.addEventListener('click', () => {
-            this.toggleManager2Field(true);
-        });
-        
-        return button;
-    }
-
-    /**
-     * 담당자2 필드 토글 (표시/숨김)
-     * @param {boolean} show - 표시 여부
-     */
-    toggleManager2Field(show) {
-        const manager2Field = document.querySelector('[data-field-name="담당자2"]');
-        const addButton = document.querySelector('.add-manager-btn');
-        
-        if (manager2Field) {
-            if (show) {
-                manager2Field.style.display = 'block';
-                if (addButton) addButton.style.display = 'none';
-                
-                // 담당자2 필드에 삭제 버튼 추가
-                this.addRemoveButton(manager2Field);
-            } else {
-                manager2Field.style.display = 'none';
-                if (addButton) addButton.style.display = 'block';
-                
-                // 담당자2 필드 값 초기화
-                const input = manager2Field.querySelector('.form-field-input');
-                if (input) input.value = '';
-            }
-        }
-    }
-
-    /**
-     * 담당자2 필드에 삭제 버튼 추가
-     * @param {HTMLElement} fieldElement - 필드 요소
-     */
-    addRemoveButton(fieldElement) {
-        // 이미 삭제 버튼이 있는지 확인
-        if (fieldElement.querySelector('.remove-manager-btn')) return;
-        
-        const removeButton = document.createElement('button');
-        removeButton.type = 'button';
-        removeButton.className = 'remove-manager-btn';
-        removeButton.innerHTML = '✕';
-        removeButton.title = '담당자 제거';
-        
-        removeButton.addEventListener('click', () => {
-            this.toggleManager2Field(false);
-        });
-        
-        // 버튼을 라벨 옆에 추가
-        const label = fieldElement.querySelector('.form-field-label');
-        if (label) {
-            label.appendChild(removeButton);
-        }
-    }
 
 
 
-    /**
-     * 조건부 필드 초기화
-     */
-    initializeConditionalFields() {
-        // 담당자2 필드를 기본적으로 숨김
-        const manager2Field = document.querySelector('[data-field-name="담당자2"]');
-        if (manager2Field) {
-            manager2Field.style.display = 'none';
-        }
-    }
+
+
+
+
+
+
 }
 
 window.FormField = new FormField(); 

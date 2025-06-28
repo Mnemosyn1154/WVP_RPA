@@ -25,26 +25,31 @@ window.HistoryModal = {
           {
             text: '히스토리 초기화',
             type: 'danger',
-            action: async () => {
-              const confirmed = await window.Modal.confirm(
-                '모든 작업 기록을 삭제하시겠습니까?<br>' +
-                '<span style="color: #666; font-size: 0.9em;">이 작업은 되돌릴 수 없습니다.</span>',
-                '🗑️ 히스토리 초기화'
-              );
-              
-              if (confirmed) {
-                window.HistoryManager.clearHistory();
-                window.Toast.show('작업 히스토리가 초기화되었습니다.', 'info');
-                window.Modal.close();
-              }
-            }
+            action: 'clear'
           },
           {
             text: '닫기',
-            type: 'default',
-            action: () => window.Modal.close()
+            type: 'secondary',
+            action: 'close'
           }
-        ]
+        ],
+        onAction: async (action) => {
+          if (action === 'clear') {
+            const confirmed = await window.Modal.confirm(
+              '모든 작업 기록을 삭제하시겠습니까?<br>' +
+              '<span style="color: #666; font-size: 0.9em;">이 작업은 되돌릴 수 없습니다.</span>',
+              '🗑️ 히스토리 초기화'
+            );
+            
+            if (confirmed) {
+              window.HistoryManager.clearHistory();
+              window.Toast.show('작업 히스토리가 초기화되었습니다.', 'info');
+              return true; // 모달을 닫기 위해 true 반환
+            }
+            return false; // 모달을 열어두기 위해 false 반환
+          }
+          return true; // 다른 액션들은 모달을 닫음
+        }
       });
       
     } catch (error) {

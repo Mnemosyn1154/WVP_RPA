@@ -10,8 +10,8 @@
 
 /* 2. Header */
 .header {
-  background-color: var(--bg-primary);
-  border-bottom: 1px solid var(--border-color);
+  background-color: var(--color-background);
+  border-bottom: 1px solid var(--color-border);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -34,18 +34,25 @@
 }
 
 .logo h1 {
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-bold);
-  color: var(--primary-color);
+  color: var(--color-primary);
   margin: 0;
+}
+
+.logo-img {
+  height: 36px;
+  width: auto;
+  margin-right: var(--spacing-xs);
 }
 
 .version {
   font-size: var(--font-size-xs);
-  color: var(--text-muted);
-  background-color: var(--gray-100);
+  color: var(--color-text-muted);
+  background-color: var(--color-muted);
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: var(--border-radius-full);
+  border: 1px solid var(--color-border);
 }
 
 .nav {
@@ -63,16 +70,16 @@
 
 .currency-label {
   font-size: var(--font-size-xs);
-  color: var(--text-secondary);
+  color: var(--color-text-secondary);
   white-space: nowrap;
 }
 
 .currency-selector {
   padding: var(--spacing-xs) var(--spacing-sm);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--color-border);
   border-radius: var(--border-radius-sm);
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
+  background-color: var(--color-surface);
+  color: var(--color-text);
   font-size: var(--font-size-xs);
   min-width: 120px;
   transition: all var(--transition-fast);
@@ -80,23 +87,24 @@
 
 .currency-selector:focus {
   outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px var(--primary-color-alpha);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-alpha);
 }
 
 .nav-button {
   padding: var(--spacing-sm) var(--spacing-md);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--color-border);
   border-radius: var(--border-radius-md);
-  background-color: var(--bg-primary);
-  color: var(--text-secondary);
+  background-color: var(--color-surface);
+  color: var(--color-text-secondary);
   font-size: var(--font-size-sm);
   transition: all var(--transition-fast);
 }
 
 .nav-button:hover {
-  background-color: var(--bg-secondary);
-  color: var(--text-primary);
+  background-color: var(--color-hover);
+  color: var(--color-text);
+  border-color: var(--color-primary);
 }
 
 /* 3. Main Content */
@@ -128,8 +136,8 @@
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid var(--gray-200);
-  border-top: 3px solid var(--primary-color);
+  border: 3px solid var(--color-border);
+  border-top: 3px solid var(--color-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: var(--spacing-md);
@@ -141,23 +149,24 @@
 }
 
 .loading p {
-  color: var(--text-muted);
+  color: var(--color-text-muted);
   margin: 0;
 }
 
 /* 7. Action Bar */
 .action-bar {
-  max-width: var(--container-max-width);
+  max-width: var(--container-max-width);  /* 폼 컨테이너와 동일한 폭 */
   margin: var(--spacing-2xl) auto 0;
-  padding: var(--spacing-xl) var(--container-padding);
+  padding: var(--spacing-lg) var(--container-padding);  /* 폼 컨테이너와 동일한 패딩 */
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-lg);
   justify-content: space-between;
   align-items: center;
-  background-color: var(--bg-secondary);
+  background-color: var(--color-surface);
   border-radius: var(--border-radius-lg);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
 }
 
 .action-group {
@@ -168,8 +177,8 @@
 
 /* 8. Footer */
 .footer {
-  background-color: var(--bg-secondary);
-  border-top: 1px solid var(--border-color);
+  background-color: var(--color-surface);
+  border-top: 1px solid var(--color-border);
   margin-top: var(--spacing-4xl);
 }
 
@@ -185,7 +194,7 @@
 }
 
 .footer-container p {
-  color: var(--text-muted);
+  color: var(--color-text-muted);
   font-size: var(--font-size-sm);
   margin: 0;
 }
@@ -196,13 +205,13 @@
 }
 
 .footer-links a {
-  color: var(--text-muted);
+  color: var(--color-text-muted);
   font-size: var(--font-size-sm);
   transition: color var(--transition-fast);
 }
 
 .footer-links a:hover {
-  color: var(--primary-color);
+  color: var(--color-primary);
 }
 
 /* 9. Toast Container */

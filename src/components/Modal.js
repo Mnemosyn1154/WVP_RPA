@@ -79,6 +79,11 @@ class Modal {
         return false;
     }
 
+    close() {
+        // closeTopModal의 별칭 (편의를 위해)
+        return this.closeTopModal();
+    }
+
     createModalElement(id, config) {
         const overlay = document.createElement('div');
         overlay.className = 'modal-overlay';

@@ -325,10 +325,22 @@ class InvestmentDocumentApp {
     const header = document.querySelector('.header');
     if (header) {
       header.addEventListener('click', (event) => {
-        const navButton = event.target.closest('.nav-button[data-action]');
+        const navButton = event.target.closest('.nav-button');
         if (navButton) {
-          const action = navButton.getAttribute('data-action');
-          this.handleNavAction(action);
+          const buttonId = navButton.id;
+          
+          // 버튼 ID에 따른 액션 매핑
+          const navActions = {
+            historyBtn: 'history',
+            helpBtn: 'help',
+            settingsBtn: 'settings'
+          };
+          
+          const action = navActions[buttonId];
+          if (action) {
+            event.preventDefault();
+            this.handleNavAction(action);
+          }
         }
       });
     }

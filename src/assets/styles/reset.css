@@ -25,8 +25,8 @@ body {
   font-size: var(--font-size-base);
   font-weight: var(--font-weight-normal);
   line-height: var(--line-height-normal);
-  color: var(--text-primary);
-  background-color: var(--bg-primary);
+  color: var(--color-text);
+  background-color: var(--color-background);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -52,18 +52,18 @@ p {
 
 /* 5. Link Reset */
 a {
-  color: var(--primary-color);
+  color: var(--color-primary);
   text-decoration: none;
   transition: color var(--transition-fast);
 }
 
 a:hover {
-  color: var(--primary-hover);
+  color: var(--color-primary-dark);
   text-decoration: underline;
 }
 
 a:focus {
-  outline: 2px solid var(--primary-color);
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
@@ -89,22 +89,22 @@ button {
 }
 
 input, select, textarea {
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--color-border);
   border-radius: var(--border-radius-md);
   padding: var(--input-padding-y) var(--input-padding-x);
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
+  background-color: var(--color-background);
+  color: var(--color-text);
   transition: border-color var(--transition-fast);
 }
 
 input:focus, select:focus, textarea:focus {
   outline: none;
-  border-color: var(--border-focus);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 3px var(--color-primary-alpha);
 }
 
 input::placeholder, textarea::placeholder {
-  color: var(--text-light);
+  color: var(--color-text-light);
 }
 
 /* 8. Table Reset */
@@ -156,19 +156,19 @@ summary {
 
 /* 12. Focus Styles */
 :focus {
-  outline: 2px solid var(--primary-color);
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
 /* 13. Selection Styles */
 ::selection {
-  background-color: var(--primary-light);
-  color: var(--primary-color);
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
 }
 
 ::-moz-selection {
-  background-color: var(--primary-light);
-  color: var(--primary-color);
+  background-color: var(--color-primary-light);
+  color: var(--color-primary);
 }
 
 /* 14. Scrollbar Styling (Webkit) */
@@ -178,7 +178,7 @@ summary {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
+  background: var(--color-muted);
 }
 
 ::-webkit-scrollbar-thumb {

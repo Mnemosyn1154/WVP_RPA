@@ -129,8 +129,8 @@
       this.tourTooltip = null;
       this.contextTooltips = new Map();
       
-      // 최초 사용자 체크
-      this.checkFirstTimeUser();
+      // 최초 사용자 체크 기능 비활성화 (튜토리얼 자동 시작 방지)
+      // this.checkFirstTimeUser();
     }
 
     /**
@@ -352,28 +352,55 @@
           .shortcut-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 12px;
-            margin-top: 10px;
+            gap: 15px;
+            margin-top: 15px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            border: 1px solid #dee2e6;
           }
 
           .shortcut-item {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 8px 12px;
-            background-color: #f8f9fa;
-            border-radius: 6px;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 12px 16px;
+            background-color: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
             font-size: 14px;
+            font-weight: 500;
+            color: #2c3e50;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+          }
+
+          .shortcut-item:hover {
+            background-color: #f8f9fa;
+            border-color: var(--color-primary);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
           }
 
           .shortcut-item kbd {
-            background-color: #fff;
-            border: 1px solid #ddd;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-family: monospace;
-            font-size: 12px;
-            box-shadow: 0 2px 0 #ddd;
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            border: 2px solid #e9ecef;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-primary);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), inset 0 1px 0 #ffffff;
+            min-width: 80px;
+            text-align: center;
+          }
+
+          .shortcut-item span {
+            flex: 1;
+            font-weight: 500;
+            color: #495057;
           }
 
           .tutorial-start-btn {
