@@ -13,7 +13,7 @@ class CurrencyManager {
 
     async loadCurrencyConfig() {
         try {
-            const response = await fetch('src/config/currencies.json');
+            const response = await fetch(`src/config/currencies.json?v=${Date.now()}`);
             const config = await response.json();
             
             this.currencies = config.currencies;
@@ -33,6 +33,36 @@ class CurrencyManager {
 
     setDefaultConfig() {
         this.currencies = {
+            'USD': {
+                code: 'USD',
+                name: '미국 달러',
+                symbol: '$',
+                units: {
+                    base: {
+                        unit: 'USD',
+                        suffix: '',
+                        multiplier: 1,
+                        format: {
+                            prefix: '$',
+                            suffix: '',
+                            separator: ',',
+                            decimal: '.' 
+                        }
+                    },
+                    large: {
+                        unit: 'Million USD',
+                        suffix: 'M',
+                        multiplier: 1000000,
+                        format: {
+                            prefix: '$',
+                            suffix: 'M',
+                            separator: ',',
+                            decimal: '.' 
+                        }
+                    }
+                },
+                decimalPlaces: 2
+            },
             'KRW': {
                 code: 'KRW',
                 name: '한국 원',
@@ -46,7 +76,7 @@ class CurrencyManager {
                             prefix: '',
                             suffix: '원',
                             separator: ',',
-                            decimal: '.'
+                            decimal: '.' 
                         }
                     },
                     large: {
@@ -57,19 +87,19 @@ class CurrencyManager {
                             prefix: '',
                             suffix: '억원',
                             separator: ',',
-                            decimal: '.'
+                            decimal: '.' 
                         }
                     }
                 },
                 decimalPlaces: 0
             }
         };
-        this.currentCurrency = 'KRW';
+        this.currentCurrency = 'USD';
     }
 
     /**
      * 현재 화폐 설정
-     * @param {string} currencyCode - 화폐 코드 (KRW, USD, EUR 등)
+     * @param {string} currencyCode - 화폐 코드 (KRW, USD)
      */
     setCurrency(currencyCode) {
         if (!this.currencies[currencyCode]) {
@@ -267,7 +297,7 @@ class CurrencyManager {
         this.getSupportedCurrencies().forEach(currency => {
             const option = document.createElement('option');
             option.value = currency.code;
-            option.textContent = `${currency.symbol} ${currency.name} (${currency.unit})`;
+            option.textContent = `${currency.symbol} ${currency.name}`;
             
             if (currency.code === this.currentCurrency) {
                 option.selected = true;
