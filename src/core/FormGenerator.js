@@ -1510,7 +1510,46 @@ class FormGenerator {
     /**
      * 컴포넌트 정리 (메모리 누수 방지)
      */
-    cleanup() {
+
+    /**
+     * 화폐 단위 변경 시 모든 필드 업데이트
+     */
+    updateCurrencyUnits() {
+        try {
+            console.log('💱 폼 필드 화폐 단위 업데이트 시작...');
+            
+            // 화폐 관련 필드들 업데이트
+            const currencyFields = [
+                '투자금액', '투자전가치', '투자후가치', 
+                '투자단가', '액면가'
+            ];
+            
+            currencyFields.forEach(fieldName => {
+                const fieldElement = document.querySelector(`[data-field-name="${fieldName}"]`);
+                if (fieldElement) {
+                    const unitElement = fieldElement.querySelector('.field-unit');
+                    if (unitElement && window.CurrencyManager) {
+                        // 필드 타입 결정
+                        let fieldType = 'investment_amount'; // 기본값
+                        if (fieldName === '투자단가' || fieldName === '액면가') {
+                            fieldType = 'price_per_share';
+                        }
+                        
+                        // 새로운 단위 텍스트 가져오기
+                        const newUnit = window.CurrencyManager.getUnitString(fieldType);
+                        unitElement.textContent = newUnit;
+                        
+                        console.log(`💱 ${fieldName} 필드 단위 업데이트: ${newUnit}`);
+                    }
+                }
+            });
+            
+            console.log('💱 폼 필드 화폐 단위 업데이트 완료');
+            
+        } catch (error) {
+            console.error('화폐 단위 업데이트 실패:', error);
+        }
+    }    cleanup() {
         // 이벤트 리스너 제거
         const container = this.formContainer || document.getElementById('formContainer');
         if (container) {

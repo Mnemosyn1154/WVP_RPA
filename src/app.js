@@ -254,7 +254,11 @@ class InvestmentDocumentApp {
   attachEventListeners() {
     try {
       // 폼 데이터 변경 이벤트
-      document.addEventListener('formDataChanged', (event) => {
+      // 화폐 변경 이벤트
+      document.addEventListener('currencyChanged', (event) => {
+        this.handleCurrencyChange(event.detail);
+      });
+            document.addEventListener('formDataChanged', (event) => {
         this.handleFormDataChange(event.detail);
       });
       
@@ -616,7 +620,27 @@ class InvestmentDocumentApp {
    * 계산 완료 처리
    * @param {Object} result - 계산 결과
    */
-  handleCalculationComplete(result) {
+  /**
+   * 화폐 변경 처리
+   * @param {Object} detail - 화폐 변경 정보
+   */
+  handleCurrencyChange(detail) {
+    try {
+      console.log(`💱 화폐 변경됨: ${detail.oldCurrency} → ${detail.newCurrency}`);
+      
+      // 모든 폼 필드의 단위 표시 업데이트
+      if (this.formGenerator && this.formGenerator.updateCurrencyUnits) {
+        this.formGenerator.updateCurrencyUnits();
+      }
+      
+      // 사용자에게 화폐 변경 알림
+      this.showToast(`화폐 단위가 ${detail.currencyInfo.name}로 변경되었습니다.`, 'info');
+      
+    } catch (error) {
+      console.error('화폐 변경 처리 실패:', error);
+    }
+  }
+    handleCalculationComplete(result) {
     try {
       this.formData = { ...this.formData, ...result };
       

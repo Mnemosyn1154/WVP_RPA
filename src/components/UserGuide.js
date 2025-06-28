@@ -20,7 +20,7 @@
       {
         id: 'currency',
         title: '화폐 선택',
-        content: '우측 상단에서 원하는 화폐 단위를 선택할 수 있습니다. KRW, USD, JPY를 지원합니다.',
+        content: '우측 상단에서 원하는 화폐 단위를 선택할 수 있습니다. KRW, USD를 지원합니다.',
         target: '#currencySelectorContainer',
         position: 'bottom-left'
       },
