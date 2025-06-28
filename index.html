@@ -177,15 +177,17 @@
             </div>
             
             <nav class="nav">
-                <div class="currency-selector-container">
-                    <label for="currencySelector" class="currency-label">화폐 단위:</label>
-                    <select id="currencySelector" class="currency-selector">
-                        <option value="KRW">₩ 한국 원 (undefined)</option>
-                    </select>
+                <div id="currencySelectorContainer" class="currency-selector-container">
+                    <!-- 화폐 선택기가 여기에 동적으로 생성됩니다 -->
                 </div>
-                
-                <button type="button" class="nav-button" id="historyBtn">히스토리</button>
-                <button type="button" class="nav-button" id="helpBtn">도움말</button>
+                <button type="button" class="nav-button" id="historyBtn">
+                    <span class="btn-icon">📚</span>
+                    히스토리
+                </button>
+                <button type="button" class="nav-button" id="helpBtn">
+                    <span class="btn-icon">❓</span>
+                    도움말
+                </button>
                 <button type="button" class="nav-button" id="settingsBtn">설정</button>
             </nav>
         </div>
