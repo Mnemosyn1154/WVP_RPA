@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     image: wvp-investment-generator:latest
-    container_name: wvp-investment-app
+    container_name: wvp-investment-generator
     ports:
       - "8080:80"
     restart: unless-stopped
