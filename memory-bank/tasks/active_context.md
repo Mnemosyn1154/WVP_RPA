@@ -7,6 +7,107 @@
 - **현재 진행 작업**: 프로젝트 완성 상태 (기본 기능 100% 완료)
 - **전체 진행률**: **95% (실무 사용 가능)**
 
+## 📂 **프로젝트 구조 (Architecture)**
+
+### 🏗️ **전체 디렉토리 구조**
+```
+WVP_RPA/
+├── index.html                 # 메인 HTML 페이지 (6.9KB, 164줄)
+├── package.json              # Node.js 의존성 관리 (1.9KB, 83줄)
+├── package-lock.json         # 의존성 잠금 파일 (150KB, 4390줄)
+├── .gitignore               # Git 무시 파일 설정
+├── README.md                # 프로젝트 설명서 (5.9KB, 173줄)
+├── PRD.MD                   # 제품 요구사항 문서 (15KB, 440줄)
+│
+├── src/                     # 소스 코드 디렉토리
+│   ├── app.js               # 메인 애플리케이션 파일 (20KB, 652줄)
+│   ├── components/          # UI 컴포넌트 (5개 파일)
+│   ├── core/                # 핵심 로직 모듈 (4개 파일)
+│   ├── utils/               # 유틸리티 함수 (6개 파일)
+│   ├── config/              # 설정 파일 (4개 파일)
+│   ├── assets/              # 정적 자원
+│   └── templates/           # 문서 템플릿
+│
+├── memory-bank/             # 프로젝트 문서화
+│   ├── docs/                # 설계 문서
+│   ├── tasks/               # 작업 관리
+│   └── progress/            # 진행 상황
+│
+├── Reference/               # 참고 자료
+├── tests/                   # 테스트 파일
+└── node_modules/            # NPM 패키지
+```
+
+### 🧩 **src/ 디렉토리 상세 구조**
+
+#### **📦 components/ (UI 컴포넌트) - 5개 파일**
+- `Modal.js` (4.7KB, 156줄) - 커스텀 모달 다이얼로그
+- `FormField.js` (22KB, 624줄) - 동적 폼 필드 생성기
+- `Toast.js` (8.2KB, 317줄) - 알림 메시지 시스템
+- `FormSection.js` (2.3KB, 78줄) - 폼 섹션 관리
+- `Button.js` (6.7KB, 255줄) - 커스텀 버튼 컴포넌트
+
+#### **⚡ core/ (핵심 로직) - 4개 파일**
+- `TemplateProcessor.js` (21KB, 550줄) - 문서 템플릿 처리 엔진
+- `FormGenerator.js` (22KB, 607줄) - 동적 폼 생성 시스템
+- `DataValidator.js` (11KB, 330줄) - 데이터 유효성 검증
+- `CalculationEngine.js` (8.7KB, 273줄) - 투자 변수 자동 계산
+
+#### **🛠️ utils/ (유틸리티) - 6개 파일**
+- `ExcelProcessor.js` (23KB, 609줄) - Excel 파일 처리 (SheetJS)
+- `helpers.js` (19KB, 673줄) - 범용 헬퍼 함수
+- `fileUtils.js` (11KB, 369줄) - 파일 처리 유틸리티
+- `CurrencyManager.js` (9.6KB, 311줄) - 화폐 단위 관리
+- `FileManager.js` (9.7KB, 326줄) - 파일 업로드/다운로드
+- `storage.js` (8.5KB, 307줄) - LocalStorage 관리
+
+#### **⚙️ config/ (설정 파일) - 4개 파일**
+- `variables.json` (10KB, 294줄) - 21개 투자 변수 정의
+- `currencies.json` (5.8KB, 217줄) - 다중 화폐 설정
+- `templates.json` (3.1KB, 76줄) - 템플릿 매핑 설정
+- `validation.json` (446B, 16줄) - 기본 검증 규칙
+
+#### **🎨 assets/ (정적 자원)**
+- `styles/` - CSS 스타일 시스템 (5개 파일)
+  - `variables.css` (4.4KB, 168줄) - CSS 변수 정의
+  - `components.css` (14KB, 677줄) - 컴포넌트 스타일
+  - `layout.css` (4.4KB, 219줄) - 레이아웃 스타일
+  - `responsive.css` (5.5KB, 259줄) - 반응형 디자인
+  - `reset.css` (3.5KB, 191줄) - CSS 리셋
+- `fonts/` - 폰트 파일
+
+### 🔧 **기술 스택 및 의존성**
+
+#### **프론트엔드 라이브러리**
+- **docxtemplater** - Word 문서 생성 엔진
+- **PizZip** - ZIP 파일 처리 (docxtemplater 의존성)
+- **xlsx-js-style** (SheetJS) - Excel 파일 처리
+- **FileSaver.js** - 파일 다운로드
+
+#### **개발 도구**
+- **Live Server** - 로컬 개발 서버
+- **Git** - 버전 관리
+- **GitHub** - 원격 저장소
+
+#### **아키텍처 패턴**
+- **모듈화 설계** - 기능별 파일 분리
+- **MVC 패턴** - Model(config), View(components), Controller(core)
+- **컴포넌트 기반** - 재사용 가능한 UI 컴포넌트
+- **설정 중심** - JSON 기반 동적 구성
+
+### 📊 **코드 메트릭**
+
+#### **총 코드량 (약 5,517줄)**
+- **JavaScript**: 13개 파일, 약 3,517줄
+- **CSS**: 5개 파일, 약 1,200줄  
+- **JSON 설정**: 4개 파일, 약 800줄
+- **HTML**: 1개 파일, 164줄
+
+#### **파일 크기 분포**
+- **대용량 파일** (20KB+): FormField.js, ExcelProcessor.js, FormGenerator.js, TemplateProcessor.js
+- **중간 파일** (10-20KB): helpers.js, DataValidator.js, fileUtils.js
+- **소형 파일** (10KB 미만): 나머지 모든 파일
+
 ## ✅ 현재 완성된 상태
 
 ### 🎉 기본 시스템 완전 완료
