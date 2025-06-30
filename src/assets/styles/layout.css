@@ -1,4 +1,4 @@
-/* Layout Styles */
+/* Layout Styles - 우리벤처파트너스 브랜드 */
 
 /* 1. Container */
 .container {
@@ -8,101 +8,128 @@
   width: 100%;
 }
 
-/* 2. Header */
+/* 2. Header - 브랜드 그라데이션 */
 .header {
-  background-color: var(--bg-primary);
-  border-bottom: 1px solid var(--border-color);
+  background: linear-gradient(135deg, var(--woori-blue) 0%, var(--woori-blue-light) 100%);
+  box-shadow: var(--shadow-brand);
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: var(--shadow-sm);
+  border-bottom: 3px solid var(--woori-blue-dark);
 }
 
 .header-container {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--spacing-md) var(--container-padding);
+  padding: var(--spacing-lg) var(--container-padding);
   max-width: var(--container-max-width);
   margin: 0 auto;
+  min-height: 80px;
 }
 
 .logo {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-md);
 }
 
 .logo h1 {
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-2xl);
   font-weight: var(--font-weight-bold);
-  color: var(--primary-color);
+  color: var(--text-inverse);
   margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
 }
 
 .version {
   font-size: var(--font-size-xs);
-  color: var(--text-muted);
-  background-color: var(--gray-700);
+  color: rgba(255, 255, 255, 0.8);
+  background-color: rgba(255, 255, 255, 0.2);
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: var(--border-radius-full);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  font-weight: var(--font-weight-medium);
 }
 
 .nav {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-md);
 }
 
 .currency-selector-container {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  margin-right: var(--spacing-md);
+  gap: var(--spacing-sm);
+  margin-right: var(--spacing-lg);
 }
 
 .currency-label {
-  font-size: var(--font-size-xs);
-  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+  color: rgba(255, 255, 255, 0.9);
   white-space: nowrap;
+  font-weight: var(--font-weight-medium);
 }
 
 .currency-selector {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  font-size: var(--font-size-xs);
-  min-width: 120px;
-  transition: all var(--transition-fast);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--border-radius-md);
+  background-color: rgba(255, 255, 255, 0.15);
+  color: var(--text-inverse);
+  font-size: var(--font-size-sm);
+  min-width: 140px;
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-normal);
+  backdrop-filter: blur(10px);
 }
 
 .currency-selector:focus {
   outline: none;
-  border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px var(--primary-color-alpha);
+  border-color: rgba(255, 255, 255, 0.6);
+  background-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+}
+
+.currency-selector option {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
 }
 
 .nav-button {
-  padding: var(--spacing-sm) var(--spacing-md);
-  border: 1px solid var(--border-color);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: var(--border-radius-md);
-  background-color: var(--bg-primary);
-  color: var(--text-secondary);
+  background-color: rgba(255, 255, 255, 0.15);
+  color: var(--text-inverse);
   font-size: var(--font-size-sm);
-  transition: all var(--transition-fast);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition-normal);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
 }
 
 .nav-button:hover {
-  background-color: var(--bg-secondary);
-  color: var(--text-primary);
+  background-color: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.nav-button:active {
+  transform: translateY(0);
 }
 
 /* 3. Main Content */
 .main {
-  min-height: calc(100vh - 120px);
-  padding: var(--spacing-xl) 0;
+  min-height: calc(100vh - 160px);
+  padding: var(--spacing-2xl) 0;
+  background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
 }
 
 /* 4. Form Container */
@@ -115,7 +142,7 @@
   grid-template-columns: 1fr;
 }
 
-/* 6. Loading State */
+/* 5. Loading State - 브랜드 컬러 */
 .loading {
   display: flex;
   flex-direction: column;
@@ -123,16 +150,20 @@
   justify-content: center;
   padding: var(--spacing-4xl);
   text-align: center;
+  background: var(--bg-brand-light);
+  border-radius: var(--border-radius-xl);
+  border: 2px solid var(--border-brand);
+  box-shadow: var(--shadow-lg);
 }
 
 .spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--gray-200);
-  border-top: 3px solid var(--primary-color);
+  width: 60px;
+  height: 60px;
+  border: 4px solid var(--woori-blue-pale);
+  border-top: 4px solid var(--woori-blue);
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
 }
 
 @keyframes spin {
@@ -141,11 +172,19 @@
 }
 
 .loading p {
-  color: var(--text-muted);
+  color: var(--woori-blue-dark);
   margin: 0;
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-lg);
 }
 
-/* 7. Action Bar */
+.loading .loading-subtitle {
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+  margin-top: var(--spacing-sm);
+}
+
+/* 6. Action Bar */
 .action-bar {
   max-width: var(--container-max-width);
   margin: var(--spacing-2xl) auto 0;
@@ -155,57 +194,63 @@
   gap: var(--spacing-lg);
   justify-content: space-between;
   align-items: center;
-  background-color: var(--bg-secondary);
-  border-radius: var(--border-radius-lg);
-  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  border-radius: var(--border-radius-xl);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-lg);
 }
 
 .action-group {
   display: flex;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-md);
   flex-wrap: wrap;
+  align-items: center;
 }
 
-/* 8. Footer */
+/* 7. Footer - 브랜드 스타일 */
 .footer {
-  background-color: var(--bg-secondary);
-  border-top: 1px solid var(--border-color);
+  background: linear-gradient(135deg, var(--gray-800) 0%, var(--gray-900) 100%);
+  border-top: 3px solid var(--woori-blue);
   margin-top: var(--spacing-4xl);
+  color: var(--text-inverse);
 }
 
 .footer-container {
   max-width: var(--container-max-width);
   margin: 0 auto;
-  padding: var(--spacing-xl) var(--container-padding);
+  padding: var(--spacing-2xl) var(--container-padding);
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--spacing-md);
+  gap: var(--spacing-lg);
 }
 
 .footer-container p {
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.8);
   font-size: var(--font-size-sm);
   margin: 0;
 }
 
 .footer-links {
   display: flex;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-xl);
 }
 
 .footer-links a {
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.7);
   font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
   transition: color var(--transition-fast);
+  text-decoration: none;
 }
 
 .footer-links a:hover {
-  color: var(--primary-color);
+  color: var(--woori-blue-light);
+  text-decoration: underline;
 }
 
-/* 9. Toast Container */
+/* 8. Toast Container */
 .toast-container {
   position: fixed;
   top: var(--spacing-xl);
@@ -216,4 +261,39 @@
   gap: var(--spacing-sm);
   max-width: 400px;
   width: 100%;
+}
+
+/* 9. 브랜드 그라데이션 헬퍼 클래스 */
+.brand-header {
+  background: linear-gradient(135deg, var(--woori-blue) 0%, var(--woori-blue-light) 100%);
+  color: var(--text-inverse);
+}
+
+.brand-section {
+  background: var(--bg-brand-light);
+  border: 1px solid var(--border-brand);
+}
+
+/* 10. 반응형 조정 */
+@media (max-width: 768px) {
+  .header-container {
+    padding: var(--spacing-md);
+    min-height: 70px;
+  }
+  
+  .logo h1 {
+    font-size: var(--font-size-xl);
+  }
+  
+  .nav {
+    gap: var(--spacing-sm);
+  }
+  
+  .currency-selector-container {
+    margin-right: var(--spacing-md);
+  }
+  
+  .action-bar {
+    padding: var(--spacing-lg);
+  }
 } 
