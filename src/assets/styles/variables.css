@@ -1,28 +1,28 @@
 :root {
-  /* 색상 팔레트 */
-  --primary-color: #2563eb;
-  --primary-hover: #1d4ed8;
-  --primary-light: #eff6ff;
+  /* 색상 팔레트 (다크모드 적용) */
+  --primary-color: #4a9eff;
+  --primary-hover: #357abd;
+  --primary-light: #1e293b;
   
-  --secondary-color: #64748b;
-  --secondary-hover: #475569;
-  --secondary-light: #f8fafc;
+  --secondary-color: #6c757d;
+  --secondary-hover: #545b62;
+  --secondary-light: #1e293b;
   
-  --success-color: #16a34a;
-  --success-hover: #15803d;
-  --success-light: #f0fdf4;
+  --success-color: #28a745;
+  --success-hover: #1e7e34;
+  --success-light: #1e293b;
   
-  --error-color: #dc2626;
-  --error-hover: #b91c1c;
-  --error-light: #fef2f2;
+  --error-color: #dc3545;
+  --error-hover: #bd2130;
+  --error-light: #1e293b;
   
-  --warning-color: #d97706;
-  --warning-hover: #b45309;
-  --warning-light: #fffbeb;
+  --warning-color: #ffc107;
+  --warning-hover: #d39e00;
+  --warning-light: #1e293b;
   
-  --info-color: #0891b2;
-  --info-hover: #0e7490;
-  --info-light: #f0fdff;
+  --info-color: #17a2b8;
+  --info-hover: #117a8b;
+  --info-light: #1e293b;
   
   /* 그레이스케일 */
   --gray-50: #f8fafc;
