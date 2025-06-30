@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  wvp-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: wvp-investment-generator:latest
+    container_name: wvp-investment-app
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    environment:
+      - NGINX_HOST=localhost
+      - NGINX_PORT=80
+    volumes:
+      # 개발 시 실시간 파일 변경 반영 (선택사항)
+      # - ./src:/usr/share/nginx/html/src:ro
+      # - ./index.html:/usr/share/nginx/html/index.html:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.wvp.rule=Host(`localhost`)"
+      - "traefik.http.services.wvp.loadbalancer.server.port=80"
+    networks:
+      - wvp-network
+
+networks:
+  wvp-network:
+    driver: bridge
+
+# 데이터 볼륨 (향후 확장 시 사용)
+volumes:
+  wvp-data: 

@@ -1,0 +1,48 @@
+# Git 관련
+.git
+.gitignore
+*.md
+
+# Node.js 관련
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 개발 도구
+.vscode
+.idea
+*.swp
+*.swo
+
+# 시스템 파일
+.DS_Store
+Thumbs.db
+
+# 로그 파일
+logs
+*.log
+
+# 테스트 파일
+tests/
+*.test.js
+
+# 개발 이미지
+*.png
+*.jpg
+*.jpeg
+
+# Docker 관련
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# 메모리 뱅크 (문서화 파일)
+memory-bank/
+
+# 참고 자료
+Reference/
+
+# 임시 파일
+*.tmp
+*.temp 
