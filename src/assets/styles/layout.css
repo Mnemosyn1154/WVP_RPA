@@ -43,7 +43,7 @@
 .version {
   font-size: var(--font-size-xs);
   color: var(--text-muted);
-  background-color: var(--gray-100);
+  background-color: var(--gray-700);
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: var(--border-radius-full);
 }

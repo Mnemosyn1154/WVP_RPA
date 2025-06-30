@@ -13,10 +13,10 @@ services:
     environment:
       - NGINX_HOST=localhost
       - NGINX_PORT=80
-    volumes:
-      # 개발 시 실시간 파일 변경 반영 (선택사항)
-      # - ./src:/usr/share/nginx/html/src:ro
-      # - ./index.html:/usr/share/nginx/html/index.html:ro
+    # volumes:
+    #   # 개발 시 실시간 파일 변경 반영 (선택사항)
+    #   - ./src:/usr/share/nginx/html/src:ro
+    #   - ./index.html:/usr/share/nginx/html/index.html:ro
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.wvp.rule=Host(`localhost`)"

@@ -1,7 +1,8 @@
 # Git 관련
 .git
 .gitignore
-*.md
+# *.md
+!README.md
 
 # Node.js 관련
 node_modules

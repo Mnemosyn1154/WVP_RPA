@@ -36,21 +36,21 @@
   --gray-800: #1e293b;
   --gray-900: #0f172a;
   
-  /* 텍스트 색상 */
-  --text-primary: var(--gray-900);
-  --text-secondary: var(--gray-600);
-  --text-muted: var(--gray-500);
-  --text-light: var(--gray-400);
-  --text-inverse: #ffffff;
+  /* 텍스트 색상 (다크모드 기본 적용) */
+  --text-primary: var(--gray-100);
+  --text-secondary: var(--gray-300);
+  --text-muted: var(--gray-400);
+  --text-light: var(--gray-500);
+  --text-inverse: #000000;
   
-  /* 배경 색상 */
-  --bg-primary: #ffffff;
-  --bg-secondary: var(--gray-50);
-  --bg-muted: var(--gray-100);
+  /* 배경 색상 (다크모드 기본 적용) */
+  --bg-primary: var(--gray-900);
+  --bg-secondary: var(--gray-800);
+  --bg-muted: var(--gray-700);
   --bg-dark: var(--gray-900);
   
-  /* 보더 색상 */
-  --border-color: var(--gray-200);
+  /* 보더 색상 (다크모드 기본 적용) */
+  --border-color: var(--gray-700);
   --border-focus: var(--primary-color);
   --border-error: var(--error-color);
   
@@ -142,21 +142,7 @@
   --grid-gap-mobile: var(--spacing-md);
 }
 
-/* 다크 모드 지원 */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text-primary: var(--gray-100);
-    --text-secondary: var(--gray-300);
-    --text-muted: var(--gray-400);
-    --text-light: var(--gray-500);
-    
-    --bg-primary: var(--gray-900);
-    --bg-secondary: var(--gray-800);
-    --bg-muted: var(--gray-700);
-    
-    --border-color: var(--gray-700);
-  }
-}
+/* 다크 모드로 통일 적용 완료 - 미디어 쿼리 제거 */
 
 /* 접근성 - 모션 줄이기 */
 @media (prefers-reduced-motion: reduce) {

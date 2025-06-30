@@ -160,15 +160,15 @@ summary {
   outline-offset: 2px;
 }
 
-/* 13. Selection Styles */
+/* 13. Selection Styles (다크모드 적용) */
 ::selection {
-  background-color: var(--primary-light);
-  color: var(--primary-color);
+  background-color: var(--primary-color);
+  color: var(--text-inverse);
 }
 
 ::-moz-selection {
-  background-color: var(--primary-light);
-  color: var(--primary-color);
+  background-color: var(--primary-color);
+  color: var(--text-inverse);
 }
 
 /* 14. Scrollbar Styling (Webkit) */
