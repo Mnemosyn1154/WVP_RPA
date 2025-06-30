@@ -267,7 +267,7 @@ class CurrencyManager {
         this.getSupportedCurrencies().forEach(currency => {
             const option = document.createElement('option');
             option.value = currency.code;
-            option.textContent = `${currency.symbol} ${currency.name} (${currency.unit})`;
+            option.textContent = `${currency.symbol} ${currency.name}`;
             
             if (currency.code === this.currentCurrency) {
                 option.selected = true;
